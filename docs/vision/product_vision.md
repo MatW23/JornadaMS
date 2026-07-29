@@ -351,16 +351,711 @@ O JornadaMS não se limita ao controle eletrônico de ponto. Sua proposta de val
 
 ## 10. Escopo do MVP
 
-## 11. Funcionalidades Futuras
+### Objetivo
 
-## 12. Fora do Escopo
+O MVP (Minimum Viable Product) do JornadaMS tem como objetivo disponibilizar uma versão funcional da plataforma capaz de substituir o processo manual de registro de jornada por um sistema corporativo confiável, centralizado e auditável.
+
+Esta primeira versão deverá contemplar apenas as funcionalidades essenciais para validação do produto em ambiente real, priorizando estabilidade, usabilidade e qualidade da informação.
+
+### Funcionalidades Incluídas
+**Gestão de Usuários**
+Cadastro de colaboradores.
+Cadastro de departamentos.
+Cadastro de cargos.
+Cadastro de empresas.
+Cadastro de filiais.
+Cadastro do identificador (emoji) utilizado pelo colaborador.
+Ativação e desativação de colaboradores.
+
+**Registro de Jornada**
+Registro de entrada.
+Registro de início do intervalo.
+Registro de retorno do intervalo.
+Registro de saída.
+Validação da sequência dos registros.
+Registro da data e horário do evento.
+Registro do dispositivo utilizado (quando aplicável).
+
+**Gestão da Jornada**
+Definição de jornadas de trabalho.
+Configuração de horários.
+Configuração de tolerâncias.
+Controle de banco de horas.
+Configuração de escalas simples.
+
+**Motor de Cálculo**
+Cálculo das horas trabalhadas.
+Cálculo de horas extras.
+Cálculo de atrasos.
+Cálculo de banco de horas.
+Identificação de inconsistências.
+
+**Recursos Humanos**
+Consulta da jornada dos colaboradores.
+Ajuste manual de registros.
+Registro de justificativas.
+Aprovação de ajustes.
+Histórico de alterações.
+
+**Relatórios**
+Relatório diário.
+Relatório semanal.
+Relatório mensal.
+Exportação para Excel.
+Exportação para PDF.
+
+**Dashboard**
+Indicadores básicos de jornada.
+Horas extras.
+Banco de horas.
+Atrasos.
+Absenteísmo.
+
+**Segurança**
+Login.
+Controle de acesso baseado em papéis (RBAC).
+Auditoria das alterações.
+Registro de logs.
+Controle de sessões.
+
+### Funcionalidades Não Incluídas no MVP
+
+Nesta primeira versão, não serão desenvolvidas funcionalidades cuja implementação agregaria elevada complexidade sem comprometer a validação da proposta de valor do produto.
+
+Entre elas:
+
+Reconhecimento facial.
+Integração com dispositivos biométricos.
+Integração com RFID.
+Registro por QR Code.
+Integração com sistemas ERP.
+Integração com folha de pagamento.
+API pública.
+Aplicativo mobile.
+Notificações em tempo real.
+Multiempresa.
+Multiidioma.
+
+Essas funcionalidades serão avaliadas para versões futuras do JornadaMS.
+
+### Critérios para Conclusão do MVP
+
+O MVP será considerado concluído quando:
+
+Todos os cadastros essenciais estiverem implementados.
+O registro eletrônico de ponto estiver funcional.
+O cálculo da jornada ocorrer automaticamente.
+O sistema gerar relatórios básicos.
+O controle de acesso estiver implementado.
+As operações críticas forem auditáveis.
+Os testes essenciais estiverem aprovados.
+A aplicação estiver apta para utilização em ambiente real.
+
+## 11. Funcionalidades Futuras
+Visão de Evolução
+
+O JornadaMS foi concebido como uma plataforma modular, preparada para evoluir continuamente conforme as necessidades das organizações e as demandas do mercado. Após a validação do MVP, novas funcionalidades serão incorporadas de forma incremental, ampliando a capacidade da plataforma e consolidando-a como uma solução completa para gestão da jornada de trabalho, Recursos Humanos e Workforce Management.
+
+As evoluções futuras serão priorizadas de acordo com o valor agregado aos usuários, viabilidade técnica e estratégia de negócio, preservando os princípios de escalabilidade, segurança e manutenibilidade definidos para o projeto.
+
+### Evoluções Planejadas
+
+**Gestão Avançada de Jornada**
+Escalas de trabalho complexas.
+Escalas rotativas.
+Jornadas flexíveis.
+Controle avançado de banco de horas.
+Gestão de sobreavisos.
+Controle de plantões.
+
+**Recursos Humanos**
+Gestão de férias.
+Solicitação e aprovação de afastamentos.
+Controle de licenças.
+Gestão de documentos dos colaboradores.
+Workflow de admissões e desligamentos.
+Gestão de treinamentos obrigatórios.
+
+**Registro Inteligente de Ponto**
+Reconhecimento facial.
+Leitura por QR Code.
+Integração com dispositivos biométricos.
+Integração com cartões RFID/NFC.
+Registro por geolocalização.
+Registro por aplicativo móvel.
+
+**Integrações Corporativas**
+Integração com sistemas ERP.
+Integração com sistemas de folha de pagamento.
+APIs públicas para integração com terceiros.
+Sincronização com diretórios corporativos (LDAP/Active Directory).
+Integração com Microsoft Teams e Slack.
+Integração com Microsoft Outlook e Google Calendar.
+
+**Business Intelligence e Analytics**
+Dashboards executivos.
+Indicadores em tempo real.
+Relatórios personalizados.
+Exportação para Power BI.
+Indicadores de produtividade.
+Indicadores de absenteísmo.
+Indicadores de turnover.
+Indicadores de horas extras.
+
+**Inteligência Artificial**
+Detecção automática de inconsistências.
+Identificação de padrões de absenteísmo.
+Previsão de necessidade de horas extras.
+Geração automática de relatórios gerenciais.
+Assistente virtual para colaboradores e gestores.
+Recomendações para otimização de escalas.
+
+**Aplicações Mobile**
+Aplicativo Android.
+Aplicativo iOS.
+Registro offline.
+Notificações push.
+Aprovações pelo celular.
+Consulta de banco de horas.
+
+**Segurança**
+Autenticação Multifator (MFA).
+Single Sign-On (SSO).
+Auditoria avançada.
+Criptografia ponta a ponta.
+Políticas avançadas de acesso.
+Monitoramento de eventos de segurança.
+
+### Evolução Arquitetural
+
+A arquitetura do JornadaMS será desenvolvida para permitir a incorporação de novos módulos de forma independente, preservando o baixo acoplamento entre componentes e reduzindo o impacto de futuras evoluções.
+
+Essa abordagem permitirá que a plataforma acompanhe o crescimento das organizações sem necessidade de reestruturações significativas, favorecendo sua utilização em ambientes corporativos de diferentes portes e níveis de complexidade.
+
+### Visão de Longo Prazo
+
+A longo prazo, o JornadaMS tem como objetivo evoluir de um sistema de controle eletrônico de ponto para uma plataforma completa de Workforce Management, integrando gestão de jornada, processos de Recursos Humanos, indicadores estratégicos e ferramentas inteligentes de apoio à decisão.
+
+Sua arquitetura permitirá atender desde pequenas empresas até organizações com múltiplas unidades, oferecendo uma solução escalável, segura e preparada para integração com o ecossistema corporativo.
+
+## 12. Fora do Escopo do MVP
+Objetivo
+
+Para manter o foco na entrega da primeira versão do JornadaMS e garantir previsibilidade de prazo, custo e qualidade, algumas funcionalidades não serão contempladas no MVP. Essas capacidades poderão ser avaliadas para versões futuras, conforme a evolução do produto e as necessidades dos usuários.
+
+Funcionalidades não contempladas
+Folha de Pagamento
+
+O JornadaMS não realizará processamento de folha de pagamento, cálculos de encargos trabalhistas, emissão de holerites ou obrigações fiscais. A plataforma fornecerá informações para integração com sistemas especializados.
+
+Recrutamento e Seleção
+
+Não farão parte do MVP funcionalidades relacionadas a:
+
+divulgação de vagas;
+recrutamento;
+seleção;
+entrevistas;
+onboarding;
+gestão de candidatos.
+Gestão de Benefícios
+
+Não serão desenvolvidos módulos para gerenciamento de:
+
+vale-transporte;
+vale-refeição;
+plano de saúde;
+benefícios corporativos.
+Avaliação de Desempenho
+
+O sistema não contemplará:
+
+avaliações periódicas;
+definição de metas;
+feedbacks;
+planos de desenvolvimento individual.
+Gestão Financeira
+
+Não haverá integração direta com:
+
+contas a pagar;
+contas a receber;
+faturamento;
+contabilidade;
+módulos financeiros.
+Aplicativos Mobile Nativos
+
+Durante o MVP, o acesso ocorrerá exclusivamente por meio da aplicação web responsiva.
+
+Aplicativos Android e iOS serão considerados em versões futuras.
+
+Inteligência Artificial
+
+O MVP não incluirá:
+
+reconhecimento facial;
+detecção automática de fraudes;
+análises preditivas;
+assistentes virtuais;
+recomendações inteligentes.
+Integrações Avançadas
+
+Também ficam fora do escopo inicial:
+
+Active Directory;
+LDAP;
+Microsoft Teams;
+Slack;
+Outlook;
+Google Calendar;
+APIs públicas para terceiros.
+Justificativa
+
+A definição do escopo do MVP busca concentrar os esforços de desenvolvimento nas funcionalidades essenciais para validação da proposta de valor do JornadaMS.
+
+Ao limitar a primeira versão às capacidades fundamentais de registro e gestão da jornada de trabalho, torna-se possível reduzir riscos, acelerar a entrega, facilitar a validação com usuários reais e estabelecer uma base arquitetural sólida para futuras evoluções.
+
+Benefícios da Delimitação do Escopo
+Priorização das funcionalidades de maior valor para o negócio.
+Redução da complexidade do desenvolvimento inicial.
+Maior previsibilidade de prazo e esforço.
+Facilidade para validação junto aos usuários.
+Menor risco técnico durante a implementação.
+Base arquitetural preparada para evolução incremental.
 
 ## 13. Tecnologias
+Diretrizes Tecnológicas
+
+O JornadaMS será desenvolvido utilizando tecnologias modernas, amplamente adotadas pelo mercado e alinhadas aos princípios de escalabilidade, segurança, desempenho e manutenibilidade.
+
+A seleção tecnológica prioriza ferramentas consolidadas, de código aberto e com forte suporte da comunidade, permitindo a evolução contínua da plataforma e facilitando futuras integrações com sistemas corporativos.
+
+Stack Tecnológico
+Back-end
+Python 3.13+
+FastAPI para construção da API REST
+SQLAlchemy 2.x como ORM
+Alembic para versionamento do banco de dados
+Pydantic para validação de dados
+JWT para autenticação
+Front-end
+React
+TypeScript
+Vite
+Tailwind CSS
+Shadcn/UI
+
+Embora o desenvolvimento inicial possa utilizar interfaces simplificadas, a arquitetura será preparada para uma aplicação web moderna baseada em SPA (Single Page Application).
+
+Banco de Dados
+PostgreSQL
+
+Recursos previstos:
+
+Integridade referencial
+Índices otimizados
+Views
+Procedures quando necessário
+Auditoria
+Controle transacional
+Backup e recuperação
+Cache
+Redis (planejado)
+
+Utilizado para:
+
+cache de consultas;
+sessões;
+filas;
+melhoria de desempenho.
+Mensageria (Evolução futura)
+RabbitMQ
+
+ou
+
+Apache Kafka
+
+Dependendo das necessidades de escalabilidade.
+
+Infraestrutura
+Docker
+Docker Compose
+Nginx
+GitHub Actions (CI/CD)
+
+Preparada para futura implantação em:
+
+Azure
+AWS
+Google Cloud
+Observabilidade
+
+Planeja-se incorporar mecanismos de monitoramento e diagnóstico para garantir a operação confiável da plataforma.
+
+Entre eles:
+
+Logs estruturados
+Métricas
+Health Checks
+Rastreamento de requisições (Tracing)
+
+Ferramentas previstas:
+
+Prometheus
+Grafana
+Segurança
+
+A plataforma será desenvolvida considerando boas práticas de segurança desde sua concepção (Security by Design).
+
+Entre os mecanismos previstos estão:
+
+Autenticação baseada em JWT.
+Controle de acesso por papéis (RBAC).
+Criptografia de senhas utilizando algoritmos robustos.
+Criptografia dos dados em trânsito (HTTPS/TLS).
+Auditoria das operações críticas.
+Proteção contra ataques comuns (OWASP Top 10).
+Adequação aos princípios da LGPD.
+Business Intelligence
+
+A arquitetura permitirá integração com ferramentas analíticas.
+
+Inicialmente:
+
+Microsoft Power BI
+
+Futuramente:
+
+Grafana
+Apache Superset
+Benefícios da Stack Tecnológica
+
+A tecnologia escolhida proporciona diversos benefícios para o projeto:
+
+Escalabilidade
+
+Arquitetura preparada para crescimento gradual da aplicação sem necessidade de reestruturações significativas.
+
+Desempenho
+
+Utilização de tecnologias otimizadas para processamento de grandes volumes de registros de jornada.
+
+Segurança
+
+Implementação de mecanismos modernos de autenticação, autorização e proteção dos dados.
+
+Manutenibilidade
+
+Código organizado segundo princípios de Clean Architecture, SOLID e Domain-Driven Design (DDD), facilitando manutenção e evolução contínua.
+
+Portabilidade
+
+A utilização de containers permitirá executar a aplicação em diferentes ambientes com consistência e facilidade de implantação.
+
+Extensibilidade
+
+A arquitetura modular possibilitará a adição de novos módulos e integrações sem comprometer os componentes existentes.
 
 ## 14. Princípios Arquiteturais
+Visão Geral
+
+A arquitetura do JornadaMS será orientada pelos princípios de simplicidade, modularidade, escalabilidade e manutenibilidade. O objetivo é construir uma plataforma capaz de evoluir continuamente sem comprometer a qualidade do software ou aumentar desnecessariamente sua complexidade.
+
+Para isso, serão adotados padrões arquiteturais amplamente utilizados no desenvolvimento de sistemas corporativos modernos.
+
+Arquitetura Principal
+Modular Monolith
+
+O JornadaMS será desenvolvido inicialmente como um Monólito Modular (Modular Monolith).
+
+Essa abordagem oferece um excelente equilíbrio entre simplicidade e escalabilidade, permitindo organizar o sistema em módulos independentes, com baixo acoplamento e alta coesão, sem a complexidade operacional de uma arquitetura baseada em microsserviços.
+
+Essa decisão também facilitará futuras evoluções, permitindo a extração gradual de módulos caso haja necessidade.
+
+Clean Architecture
+
+A estrutura interna da aplicação seguirá os princípios da Clean Architecture, promovendo a separação clara entre regras de negócio, infraestrutura e interfaces externas.
+
+Entre os principais benefícios destacam-se:
+
+baixo acoplamento;
+alta testabilidade;
+facilidade de manutenção;
+independência de frameworks;
+maior longevidade da aplicação.
+Domain-Driven Design (DDD)
+
+A modelagem do sistema será baseada nos conceitos de Domain-Driven Design (DDD), organizando o software de acordo com os domínios de negócio da organização.
+
+Entre os principais módulos previstos estão:
+
+Gestão de Colaboradores
+Registro de Jornada
+Recursos Humanos
+Administração
+Relatórios
+Analytics
+
+Essa abordagem aproxima o código das regras de negócio e facilita a evolução da plataforma.
+
+Arquitetura em Camadas
+
+Internamente, cada módulo seguirá uma arquitetura em camadas, separando responsabilidades entre:
+
+Apresentação
+Aplicação
+Domínio
+Infraestrutura
+
+Essa organização melhora a legibilidade do código, reduz dependências e favorece a reutilização de componentes.
+
+API-Centric
+
+Toda comunicação entre clientes e servidores será realizada por meio de APIs REST, permitindo integração com aplicações web, aplicativos móveis e sistemas corporativos.
+
+Essa estratégia também facilitará futuras integrações com:
+
+sistemas ERP;
+softwares de folha de pagamento;
+dispositivos biométricos;
+plataformas analíticas;
+aplicações de terceiros.
+Event-Driven (Evolução futura)
+
+A arquitetura será preparada para incorporar comunicação orientada a eventos em funcionalidades que demandem processamento assíncrono ou alta escalabilidade.
+
+Exemplos:
+
+geração de relatórios;
+envio de notificações;
+sincronizações;
+auditorias;
+integrações externas.
+
+Inicialmente, essa comunicação poderá ser implementada utilizando filas de mensagens quando houver necessidade técnica.
+
+Cloud-Ready
+
+Embora a primeira implantação possa ocorrer em infraestrutura local, toda a arquitetura será desenvolvida para permitir futura migração para ambientes em nuvem.
+
+Essa preparação inclui:
+
+conteinerização da aplicação;
+configuração por variáveis de ambiente;
+armazenamento desacoplado;
+integração com serviços de monitoramento;
+escalabilidade horizontal.
+Princípios de Engenharia
+
+Durante todo o desenvolvimento serão observados os seguintes princípios:
+
+SOLID
+Clean Code
+DRY (Don't Repeat Yourself)
+KISS (Keep It Simple, Stupid)
+YAGNI (You Aren't Gonna Need It)
+Separation of Concerns
+Fail Fast
+Security by Design
+Evolução Arquitetural
+
+A arquitetura do JornadaMS será concebida para permitir evolução incremental.
+
+Caso o crescimento da plataforma justifique maior distribuição da carga de processamento, os módulos do monólito poderão ser extraídos gradualmente para uma arquitetura baseada em microsserviços, preservando o domínio de negócio e minimizando impactos na aplicação.
+
+A decisão arquitetural que eu tomaria
+
+Se eu fosse o arquiteto desse projeto, registraria um ADR (Architecture Decision Record) logo no início:
+
+ADR-001 — O JornadaMS será desenvolvido inicialmente como um Monólito Modular utilizando Clean Architecture e Domain-Driven Design. A arquitetura será preparada para futura evolução para microsserviços, caso requisitos de escalabilidade, autonomia de equipes ou distribuição justifiquem essa transição.
+
+Essa decisão é adotada por muitas empresas porque evita a complexidade prematura dos microsserviços sem fechar as portas para uma evolução futura.
 
 ## 15. Critérios de Sucesso
+Objetivo
+
+Os critérios de sucesso do JornadaMS estabelecem os indicadores que permitirão avaliar se a plataforma atingiu os objetivos definidos neste Product Vision. Esses critérios servirão como referência para validação do MVP, evolução do produto e acompanhamento contínuo do seu desempenho.
+
+Critérios Funcionais
+
+O sistema será considerado bem-sucedido quando for capaz de:
+
+Registrar eventos de jornada de forma consistente e confiável.
+Automatizar os cálculos relacionados à jornada de trabalho.
+Disponibilizar informações confiáveis para colaboradores, gestores e equipes de RH.
+Permitir rastreabilidade completa das operações realizadas.
+Reduzir significativamente a necessidade de controles paralelos.
+Critérios Operacionais
+
+O JornadaMS deverá contribuir para:
+
+Redução do tempo de fechamento da jornada mensal.
+Redução do esforço administrativo do setor de RH.
+Redução do número de inconsistências nos registros.
+Maior agilidade na conferência das informações.
+Padronização dos processos relacionados ao controle de jornada.
+Critérios Técnicos
+
+A plataforma deverá atender aos seguintes requisitos de qualidade:
+
+Alta disponibilidade da aplicação.
+Baixo tempo de resposta para operações críticas.
+Escalabilidade para suportar o crescimento da organização.
+Segurança das informações armazenadas.
+Facilidade de manutenção e evolução da plataforma.
+Integração com sistemas corporativos por meio de APIs.
+Critérios de Experiência do Usuário
+
+O sucesso do produto também será medido pela percepção dos usuários quanto à utilização da plataforma.
+
+Os principais indicadores incluem:
+
+Facilidade para registrar eventos de jornada.
+Clareza das informações apresentadas.
+Transparência dos registros.
+Redução de dúvidas relacionadas ao controle de ponto.
+Satisfação geral dos usuários.
+Indicadores de Negócio
+
+A plataforma deverá gerar benefícios mensuráveis para a organização, tais como:
+
+Redução do retrabalho administrativo.
+Diminuição de riscos relacionados ao controle da jornada.
+Melhoria da governança corporativa.
+Maior confiabilidade dos dados utilizados na tomada de decisão.
+Aumento da produtividade das equipes de RH e gestão.
+Indicadores Mensuráveis
+
+Sempre que possível, os critérios anteriores deverão ser acompanhados por indicadores objetivos.
+
+Indicador	Meta Inicial
+Disponibilidade do sistema	≥ 99,5%
+Tempo médio de registro de ponto	≤ 3 segundos
+Tempo médio de resposta da API	≤ 300 ms
+Redução do tempo de fechamento da jornada	≥ 50%
+Redução de inconsistências	≥ 80%
+Satisfação dos usuários	≥ 4,5 / 5
+Registros processados por dia	Conforme demanda operacional
+Cobertura de testes automatizados	≥ 80%
+
+Observação: As metas poderão ser revisadas conforme a evolução do produto e a disponibilidade de dados operacionais.
 
 ## 16. Roadmap
+Visão Geral
 
-## 17. Glossário Inicial
+O desenvolvimento do JornadaMS será conduzido de forma incremental, permitindo que cada versão entregue valor imediato aos usuários enquanto prepara a arquitetura para futuras evoluções.
+
+A estratégia de desenvolvimento prioriza entregas pequenas, estáveis e continuamente evolutivas, reduzindo riscos técnicos e possibilitando validação constante junto aos usuários.
+
+Versão 1.0 — MVP
+Objetivo
+
+Substituir completamente o processo manual de registro de jornada.
+
+Funcionalidades
+Gestão
+Cadastro de colaboradores
+Cadastro de departamentos
+Cadastro de jornadas
+Cadastro de cargos
+Registro
+Entrada
+Intervalo
+Retorno
+Saída
+RH
+Banco de horas
+Horas extras
+Justificativas
+Ajustes
+Dashboard
+Indicadores básicos
+Relatórios
+Diário
+Semanal
+Mensal
+Segurança
+Login
+RBAC
+Auditoria
+Versão 1.5 — Expansão Operacional
+Objetivo
+
+Automatizar processos administrativos.
+
+Funcionalidades
+APIs REST
+Integração ERP
+Integração Folha
+Dashboards avançados
+Alertas
+Notificações
+Aprovações
+Versão 2.0 — Inteligência Operacional
+Objetivo
+
+Transformar dados operacionais em apoio à decisão.
+
+Funcionalidades
+Aplicativo Mobile
+Reconhecimento Facial
+QR Code
+RFID
+Geolocalização
+Business Intelligence
+Dashboards em tempo real
+Analytics
+IA para detecção de inconsistências
+Versão 3.0 — Workforce Management
+Objetivo
+
+Consolidar o JornadaMS como uma plataforma completa de gestão da força de trabalho.
+
+Funcionalidades
+Gestão de férias
+Benefícios
+Documentos
+Workflow
+Planejamento de escalas
+Gestão de turnos
+Compliance
+Auditoria avançada
+Multiempresa
+Multifilial
+Marketplace de integrações
+Evolução Arquitetural
+Versão	Arquitetura
+1.0	Monólito Modular (DDD + Clean Architecture)
+1.5	APIs públicas, Redis e mensageria opcional
+2.0	Arquitetura orientada a eventos, observabilidade e escalabilidade horizontal
+3.0	Evolução para microsserviços apenas quando houver necessidade operacional
+
+Importante: a evolução para microsserviços dependerá da maturidade do produto e de necessidades reais de escalabilidade. O JornadaMS será iniciado como um Monólito Modular, preservando simplicidade, desempenho e facilidade de manutenção.
+
+## 17. Glossário
+
+O presente glossário reúne os principais termos utilizados ao longo da documentação do JornadaMS, visando padronizar conceitos, reduzir ambiguidades e facilitar a compreensão por todos os envolvidos no projeto.
+
+Termo	Definição
+Jornada de Trabalho	Período em que o colaborador permanece à disposição da empresa para execução de suas atividades, incluindo horários regulares, intervalos e horas extraordinárias.
+Registro de Ponto	Evento que representa oficialmente uma marcação de entrada, saída ou intervalo realizada pelo colaborador.
+Banco de Horas	Sistema de compensação que registra o saldo positivo ou negativo de horas trabalhadas em relação à jornada prevista.
+Hora Extra	Tempo trabalhado além da jornada contratual, sujeito às regras estabelecidas pela legislação ou acordo coletivo.
+Ocorrência	Evento relacionado à jornada que exige tratamento administrativo, como atrasos, faltas, justificativas ou ajustes de ponto.
+Justificativa	Informação registrada para explicar ausências, atrasos ou inconsistências na jornada.
+MVP (Minimum Viable Product)	Primeira versão funcional do sistema contendo apenas as funcionalidades essenciais para validar sua proposta de valor.
+RH (Recursos Humanos)	Área responsável pela gestão administrativa dos colaboradores e dos processos relacionados à jornada de trabalho.
+Gestão de Jornada	Conjunto de processos responsáveis pelo controle da jornada, banco de horas, escalas e conformidade trabalhista.
+Workforce Management (WFM)	Conjunto de práticas e ferramentas voltadas ao planejamento, controle e otimização da força de trabalho.
+Dashboard	Interface visual que consolida indicadores e métricas para apoio à tomada de decisão.
+KPI (Key Performance Indicator)	Indicador-chave utilizado para medir desempenho e alcance dos objetivos do negócio.
+ERP (Enterprise Resource Planning)	Sistema integrado utilizado para gerenciamento dos processos corporativos da organização.
+API (Application Programming Interface)	Interface que permite comunicação padronizada entre sistemas distintos.
+RBAC (Role-Based Access Control)	Modelo de controle de acesso baseado em papéis, no qual as permissões são concedidas de acordo com a função exercida pelo usuário.
+JWT (JSON Web Token)	Padrão utilizado para autenticação e autorização de usuários em aplicações web.
+LGPD (Lei Geral de Proteção de Dados)	Legislação brasileira que regulamenta o tratamento de dados pessoais, garantindo privacidade e segurança das informações.
+Auditoria	Processo de rastreamento e registro das operações realizadas no sistema para garantir transparência e conformidade.
+Multiempresa	Capacidade da plataforma de atender múltiplas empresas utilizando a mesma infraestrutura.
+Multifilial	Capacidade de gerenciar diversas unidades pertencentes à mesma organização.
+DDD (Domain-Driven Design)	Abordagem de desenvolvimento de software baseada na modelagem do domínio de negócio.
+Clean Architecture	Modelo arquitetural que organiza o sistema em camadas independentes, reduzindo acoplamento e aumentando a manutenibilidade.
