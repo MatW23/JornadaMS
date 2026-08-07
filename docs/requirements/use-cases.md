@@ -10,6 +10,13 @@
 | Administrador | Administrar usuários, papéis, parâmetros e auditoria técnica |
 | Diretoria | Consultar dashboards e relatórios autorizados |
 
+## 2. Distribuição por incremento
+
+| Incremento | Casos de uso |
+| --- | --- |
+| MVP-1 | UC-001, UC-002, UC-003 em jornada simples, UC-004 para entrada/saída, UC-005 para consulta própria e UC-011 para papéis/parâmetros mínimos |
+| MVP-2 | UC-004 com intervalo, UC-005 para gestores/RH, UC-006, UC-007, UC-008, UC-009 e UC-010 |
+
 ## UC-001 — Autenticar usuário
 
 **Atores:** qualquer usuário ativo.  
@@ -40,7 +47,7 @@
 
 **Atores:** RH, administrador.
 
-1. Ator cria uma jornada com horários, tolerâncias e escala simples.
+1. Ator cria uma jornada simples com início, fim, fuso e vigência. Tolerâncias, intervalo e escalas entram no MVP-2.
 2. Sistema valida intervalos e vigência.
 3. Ator vincula a jornada a colaboradores ou grupo autorizado.
 4. Sistema registra a versão da configuração.
@@ -54,7 +61,7 @@
 **Pré-condições:** sessão válida, colaborador ativo e jornada disponível.
 
 1. Colaborador solicita o registro.
-2. Sistema identifica o próximo tipo esperado.
+2. Sistema identifica o próximo tipo esperado (`ENTRADA` ou `SAIDA` no MVP-1).
 3. Sistema valida sequência, idempotência e horário.
 4. Sistema grava o evento e os metadados.
 5. Sistema recalcula o resumo diário.
@@ -133,7 +140,7 @@
 3. Sistema valida impacto e registra a alteração.
 4. Novas permissões passam a valer conforme a política de sessão definida.
 
-## 2. Critérios transversais
+## 3. Critérios transversais
 
 - Toda operação de escrita deve ser idempotente quando houver risco de reenvio.
 - Toda operação crítica deve ser transacional e auditável.

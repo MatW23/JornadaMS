@@ -2,7 +2,7 @@
 
 ## 1. Status
 
-Este documento define o contrato de referência da API REST privada usada pela aplicação web do MVP. Ele não representa uma API pública para terceiros. Quando a implementação começar, o contrato deverá ser publicado também em OpenAPI YAML/JSON e validado automaticamente no pipeline.
+Este documento explica o contrato da API REST privada usada pela aplicação web. A especificação executável do MVP-1 está em [openapi.yaml](openapi.yaml). Este Markdown documenta decisões, permissões e regras que complementam o arquivo OpenAPI. A API não é pública para terceiros.
 
 ## 2. Convenções
 
@@ -11,10 +11,29 @@ Este documento define o contrato de referência da API REST privada usada pela a
 - Autenticação: `Authorization: Bearer <jwt>`.
 - Datas: ISO 8601; persistência em UTC e apresentação no fuso da organização.
 - Recursos pagináveis usam `page`, `page_size`, `sort` e filtros explícitos.
-- Escritas críticas aceitam `Idempotency-Key`.
+- `page_size` padrão é `50` e o limite máximo é `100`.
+- Escritas críticas aceitam `Idempotency-Key`; no registro de ponto, o header é obrigatório.
 - Respostas de erro possuem `code`, `message`, `details` e `correlation_id`.
 
-## 3. Resposta de erro
+## 3.1 Enums e schemas mínimos do MVP-1
+
+```text
+TimeEventType = ENTRADA | SAIDA
+TimeEventSource = WEB
+TimeEventStatus = VALID | INVALID | REJECTED
+DailySummaryStatus = IN_PROGRESS | COMPLETE | INCONSISTENT
+UserStatus = ACTIVE | INACTIVE
+```
+
+`POST /employees` recebe `name`, `registration_code`, `punch_identifier` opcional, `branch_id`, `department_id` opcional, `position_id` opcional e `user_id` opcional. `registration_code` é matrícula interna; não é CPF.
+
+`POST /work-schedules` no MVP-1 recebe `name`, `start_time`, `end_time`, `same_day_only=true` e `tolerance_minutes=0`. O fuso é herdado da filial do colaborador; não há fuso independente por jornada no MVP-1. Intervalos, tolerâncias efetivas e escalas complexas pertencem ao MVP-2.
+
+`POST /time-events` recebe `event_type`, `occurred_at` e `source`. O `employee_id` é derivado do usuário autenticado para o papel Colaborador; um administrador só pode informar outro colaborador mediante permissão explícita.
+
+`GET /attendance/days` retorna `work_date`, `scheduled_minutes`, `worked_minutes`, `balance_minutes`, `status` e os eventos daquele dia.
+
+## 3.2 Resposta de erro
 
 ```json
 {
@@ -38,14 +57,16 @@ Este documento define o contrato de referência da API REST privada usada pela a
 | `429` | Limite de tentativas/requisições excedido |
 | `500` | Falha interna; detalhes ficam apenas nos logs |
 
-## 4. Autenticação
+## 4. Autenticação e sessões
 
 | Método | Endpoint | Acesso | Descrição |
 | --- | --- | --- | --- |
-| `POST` | `/auth/login` | Público | Inicia sessão |
-| `POST` | `/auth/refresh` | Refresh token | Renova sessão |
-| `POST` | `/auth/logout` | Autenticado | Encerra sessão |
-| `GET` | `/me` | Autenticado | Retorna usuário, papel e escopo |
+| `POST` | `/auth/login` | Público | Inicia sessão (MVP-1) |
+| `POST` | `/auth/refresh` | Refresh token | Renova sessão (MVP-1) |
+| `POST` | `/auth/logout` | Autenticado | Revoga a sessão atual (MVP-1) |
+| `GET` | `/me` | Autenticado | Retorna usuário, papel e escopo (MVP-1) |
+
+O access token é um JWT curto. O refresh token é opaco, rotativo e persistido somente como hash em `sessions`. Logout revoga a sessão; refresh inválido, expirado ou revogado retorna `401`.
 
 Exemplo de login:
 
@@ -60,29 +81,29 @@ Exemplo de login:
 
 | Método | Endpoint | Papel mínimo | Descrição |
 | --- | --- | --- | --- |
-| `GET/POST` | `/companies` | Admin/RH | Listar/criar empresas |
-| `GET/PATCH` | `/companies/{company_id}` | Admin/RH | Consultar/alterar empresa |
-| `GET/POST` | `/branches` | Admin/RH | Listar/criar filiais |
-| `GET/POST` | `/departments` | Admin/RH | Listar/criar departamentos |
-| `GET/POST` | `/positions` | Admin/RH | Listar/criar cargos |
-| `GET/POST` | `/employees` | Admin/RH | Listar/criar colaboradores |
-| `GET/PATCH` | `/employees/{employee_id}` | Admin/RH | Consultar/alterar colaborador |
-| `POST` | `/employees/{employee_id}/activate` | Admin/RH | Ativar colaborador |
-| `POST` | `/employees/{employee_id}/deactivate` | Admin/RH | Desativar colaborador |
+| `GET/POST` | `/companies` | Admin/RH | Listar/criar empresas (provisionamento; MVP-1) |
+| `GET/PATCH` | `/companies/{company_id}` | Admin/RH | Consultar/alterar empresa (MVP-2) |
+| `GET/POST` | `/branches` | Admin/RH | Listar/criar filiais (provisionamento; MVP-1) |
+| `GET/POST` | `/departments` | Admin/RH | Listar/criar departamentos (MVP-2) |
+| `GET/POST` | `/positions` | Admin/RH | Listar/criar cargos (MVP-2) |
+| `GET/POST` | `/employees` | Admin/RH | Listar/criar colaboradores (MVP-1) |
+| `GET/PATCH` | `/employees/{employee_id}` | Admin/RH | Consultar/alterar colaborador (MVP-1) |
+| `POST` | `/employees/{employee_id}/activate` | Admin/RH | Ativar colaborador (MVP-1) |
+| `POST` | `/employees/{employee_id}/deactivate` | Admin/RH | Desativar colaborador (MVP-1) |
 
 ## 6. Jornadas e eventos
 
 | Método | Endpoint | Papel mínimo | Descrição |
 | --- | --- | --- | --- |
-| `GET/POST` | `/work-schedules` | Admin/RH | Listar/criar jornadas |
-| `GET/PATCH` | `/work-schedules/{schedule_id}` | Admin/RH | Consultar/alterar jornada |
-| `POST` | `/employees/{employee_id}/schedules` | Admin/RH | Vincular jornada com vigência |
-| `POST` | `/time-events` | Colaborador | Registrar evento de ponto |
-| `GET` | `/time-events` | Escopo autorizado | Consultar eventos |
-| `GET` | `/attendance/days` | Escopo autorizado | Consultar resumo diário |
-| `GET` | `/attendance/summary` | Escopo autorizado | Consolidar período |
+| `GET/POST` | `/work-schedules` | Admin/RH | Listar/criar jornada simples (MVP-1) |
+| `GET/PATCH` | `/work-schedules/{schedule_id}` | Admin/RH | Consultar/alterar jornada (MVP-1) |
+| `POST` | `/employees/{employee_id}/schedules` | Admin/RH | Vincular jornada com vigência (MVP-1) |
+| `POST` | `/time-events` | Colaborador | Registrar entrada/saída (MVP-1) |
+| `GET` | `/time-events` | Escopo autorizado | Consultar eventos (MVP-1) |
+| `GET` | `/attendance/days` | Escopo autorizado | Consultar resumo diário (MVP-1) |
+| `GET` | `/attendance/summary` | Escopo autorizado | Consolidar período (MVP-2) |
 
-Exemplo de registro:
+Exemplo de registro do MVP-1:
 
 ```json
 {
@@ -91,6 +112,8 @@ Exemplo de registro:
   "source": "WEB"
 }
 ```
+
+O header `Idempotency-Key` é obrigatório. Na primeira gravação, a resposta é `201 Created`; reenvio com a mesma chave e payload equivalente retorna `200 OK` com o mesmo resultado; reuso da chave com payload diferente retorna `409 Conflict` e `IDEMPOTENCY_KEY_REUSED`. O servidor serializa gravações concorrentes por colaborador e data antes de validar a sequência.
 
 Resposta de referência:
 
@@ -116,22 +139,22 @@ Resposta de referência:
 
 | Método | Endpoint | Papel mínimo | Descrição |
 | --- | --- | --- | --- |
-| `GET/POST` | `/justifications` | Colaborador/RH | Consultar/criar justificativa |
-| `GET/POST` | `/adjustment-requests` | Colaborador/RH | Consultar/criar solicitação |
+| `GET/POST` | `/justifications` | Colaborador/RH | Consultar/criar justificativa (MVP-2) |
+| `GET/POST` | `/adjustment-requests` | Colaborador/RH | Consultar/criar solicitação (MVP-2) |
 | `GET` | `/adjustment-requests/{id}` | Escopo autorizado | Consultar detalhe |
 | `POST` | `/adjustment-requests/{id}/approve` | Gestor/RH | Aprovar |
 | `POST` | `/adjustment-requests/{id}/reject` | Gestor/RH | Rejeitar |
-| `GET` | `/employees/{id}/attendance-history` | Escopo autorizado | Consultar histórico e versões |
+| `GET` | `/employees/{id}/attendance-history` | Escopo autorizado | Consultar histórico e versões (MVP-2) |
 
 ## 8. Relatórios, dashboard e auditoria
 
 | Método | Endpoint | Papel mínimo | Descrição |
 | --- | --- | --- | --- |
-| `GET` | `/reports/attendance` | Gestor/RH/Diretoria | Prévia do relatório por período |
+| `GET` | `/reports/attendance` | Gestor/RH/Diretoria | Prévia do relatório por período (MVP-2) |
 | `GET` | `/reports/attendance/export?format=xlsx` | Gestor/RH/Diretoria | Exportar Excel |
 | `GET` | `/reports/attendance/export?format=pdf` | Gestor/RH/Diretoria | Exportar PDF |
-| `GET` | `/dashboards/attendance` | Gestor/RH/Diretoria | Indicadores básicos |
-| `GET` | `/audit-events` | Admin/RH autorizado | Consultar auditoria |
+| `GET` | `/dashboards/attendance` | Gestor/RH/Diretoria | Indicadores básicos (MVP-2) |
+| `GET` | `/audit-events` | Admin/RH autorizado | Consultar auditoria (MVP-2) |
 
 Exportações devem aplicar exatamente o mesmo escopo da consulta que as originou e registrar um evento de auditoria.
 
@@ -161,3 +184,15 @@ Resposta paginada:
 - `GET /health/ready`: dependências mínimas estão disponíveis.
 - Mudanças incompatíveis devem criar `/api/v2`; mudanças aditivas podem permanecer em v1.
 - A especificação OpenAPI gerada pela aplicação deve ser a fonte técnica final quando os endpoints forem implementados.
+
+## 11. Matriz de permissões do MVP-1
+
+| Recurso | Colaborador | Administrador |
+| --- | --- | --- |
+| Login, refresh e logout | Própria sessão | Própria sessão |
+| Consultar próprio perfil | Sim | Sim |
+| Criar/alterar colaborador | Não | Sim |
+| Criar jornada simples | Não | Sim |
+| Registrar entrada/saída | Próprio colaborador | Com permissão explícita |
+| Consultar resumo diário | Próprio colaborador | Escopo da organização |
+| Consultar auditoria | Não | MVP-2 / permissão específica |

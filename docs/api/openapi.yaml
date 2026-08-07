@@ -1,0 +1,675 @@
+openapi: 3.1.0
+info:
+  title: JornadaMS API
+  version: 1.0.0-mvp1
+  description: API REST privada do MVP-1 do JornadaMS.
+servers:
+  - url: http://localhost:8000/api/v1
+    description: Desenvolvimento local
+tags:
+  - name: Auth
+  - name: Employees
+  - name: Schedules
+  - name: Attendance
+security:
+  - BearerAuth: []
+paths:
+  /auth/login:
+    post:
+      tags: [Auth]
+      operationId: login
+      security: []
+      x-mvp: MVP-1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Sessão iniciada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      operationId: refreshSession
+      security: []
+      x-mvp: MVP-1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: Sessão renovada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /auth/logout:
+    post:
+      tags: [Auth]
+      operationId: logout
+      x-mvp: MVP-1
+      responses:
+        '204':
+          description: Sessão revogada
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /me:
+    get:
+      tags: [Auth]
+      operationId: getCurrentUser
+      x-mvp: MVP-1
+      responses:
+        '200':
+          description: Contexto do usuário autenticado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserContext'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /employees:
+    get:
+      tags: [Employees]
+      operationId: listEmployees
+      x-mvp: MVP-1
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - in: query
+          name: status
+          schema:
+            $ref: '#/components/schemas/UserStatus'
+      responses:
+        '200':
+          description: Lista de colaboradores
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployeePage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [Employees]
+      operationId: createEmployee
+      x-mvp: MVP-1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmployeeCreate'
+      responses:
+        '201':
+          description: Colaborador criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /employees/{employee_id}:
+    parameters:
+      - $ref: '#/components/parameters/EmployeeId'
+    get:
+      tags: [Employees]
+      operationId: getEmployee
+      x-mvp: MVP-1
+      responses:
+        '200':
+          description: Colaborador
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Employees]
+      operationId: updateEmployee
+      x-mvp: MVP-1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmployeeUpdate'
+      responses:
+        '200':
+          description: Colaborador atualizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /work-schedules:
+    post:
+      tags: [Schedules]
+      operationId: createWorkSchedule
+      x-mvp: MVP-1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkScheduleCreate'
+      responses:
+        '201':
+          description: Jornada criada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkSchedule'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /employees/{employee_id}/schedules:
+    post:
+      tags: [Schedules]
+      operationId: assignEmployeeSchedule
+      x-mvp: MVP-1
+      parameters:
+        - $ref: '#/components/parameters/EmployeeId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmployeeScheduleCreate'
+      responses:
+        '201':
+          description: Jornada vinculada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployeeSchedule'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /time-events:
+    post:
+      tags: [Attendance]
+      operationId: createTimeEvent
+      x-mvp: MVP-1
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TimeEventCreate'
+      responses:
+        '201':
+          description: Evento criado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeEventResult'
+        '200':
+          description: Resultado original retornado para reenvio idempotente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeEventResult'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+    get:
+      tags: [Attendance]
+      operationId: listTimeEvents
+      x-mvp: MVP-1
+      parameters:
+        - in: query
+          name: from
+          required: true
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: to
+          required: true
+          schema:
+            type: string
+            format: date
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Eventos do período
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TimeEventPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /attendance/days:
+    get:
+      tags: [Attendance]
+      operationId: listDailySummaries
+      x-mvp: MVP-1
+      parameters:
+        - in: query
+          name: from
+          required: true
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: to
+          required: true
+          schema:
+            type: string
+            format: date
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Resumos diários
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DailySummaryPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /health/live:
+    get:
+      tags: [Auth]
+      operationId: healthLive
+      security: []
+      responses:
+        '200':
+          description: Processo ativo
+  /health/ready:
+    get:
+      tags: [Auth]
+      operationId: healthReady
+      security: []
+      responses:
+        '200':
+          description: Dependências disponíveis
+        '503':
+          description: Dependência indisponível
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    EmployeeId:
+      in: path
+      name: employee_id
+      required: true
+      schema:
+        type: string
+        format: uuid
+    IdempotencyKey:
+      in: header
+      name: Idempotency-Key
+      required: true
+      schema:
+        type: string
+        minLength: 16
+        maxLength: 128
+    Page:
+      in: query
+      name: page
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PageSize:
+      in: query
+      name: page_size
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 50
+  responses:
+    Unauthorized:
+      description: Não autenticado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      description: Sem permissão
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Recurso não encontrado
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Conflict:
+      description: Conflito de estado ou idempotência
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    ValidationError:
+      description: Dados semanticamente inválidos
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+  schemas:
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          format: password
+    RefreshRequest:
+      type: object
+      required: [refresh_token]
+      properties:
+        refresh_token:
+          type: string
+    LoginResponse:
+      type: object
+      required: [access_token, refresh_token, token_type, expires_in]
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        token_type:
+          type: string
+          const: Bearer
+        expires_in:
+          type: integer
+          description: Segundos até a expiração do access token.
+    UserContext:
+      type: object
+      required: [user_id, email, roles]
+      properties:
+        user_id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        roles:
+          type: array
+          items:
+            type: string
+        employee_id:
+          type: [string, 'null']
+          format: uuid
+    UserStatus:
+      type: string
+      enum: [ACTIVE, INACTIVE]
+    EmployeeCreate:
+      type: object
+      required: [name, registration_code, branch_id]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        registration_code:
+          type: string
+          minLength: 1
+        punch_identifier:
+          type: [string, 'null']
+        branch_id:
+          type: string
+          format: uuid
+        department_id:
+          type: [string, 'null']
+          format: uuid
+        position_id:
+          type: [string, 'null']
+          format: uuid
+        user_id:
+          type: [string, 'null']
+          format: uuid
+    EmployeeUpdate:
+      type: object
+      description: Campos opcionais para atualização parcial do colaborador.
+      properties:
+        name:
+          type: string
+          minLength: 1
+        registration_code:
+          type: string
+          minLength: 1
+        punch_identifier:
+          type: [string, 'null']
+        branch_id:
+          type: string
+          format: uuid
+        department_id:
+          type: [string, 'null']
+          format: uuid
+        position_id:
+          type: [string, 'null']
+          format: uuid
+        user_id:
+          type: [string, 'null']
+          format: uuid
+    Employee:
+      allOf:
+        - $ref: '#/components/schemas/EmployeeCreate'
+        - type: object
+          required: [id, status]
+          properties:
+            id:
+              type: string
+              format: uuid
+            status:
+              $ref: '#/components/schemas/UserStatus'
+    WorkScheduleCreate:
+      type: object
+      required: [name, start_time, end_time]
+      properties:
+        name:
+          type: string
+        start_time:
+          type: string
+          format: time
+        end_time:
+          type: string
+          format: time
+        same_day_only:
+          type: boolean
+          default: true
+        tolerance_minutes:
+          type: integer
+          minimum: 0
+          default: 0
+    WorkSchedule:
+      allOf:
+        - $ref: '#/components/schemas/WorkScheduleCreate'
+        - type: object
+          required: [id, status]
+          properties:
+            id:
+              type: string
+              format: uuid
+            status:
+              type: string
+              enum: [ACTIVE, INACTIVE]
+    EmployeeScheduleCreate:
+      type: object
+      required: [schedule_id, starts_on]
+      properties:
+        schedule_id:
+          type: string
+          format: uuid
+        starts_on:
+          type: string
+          format: date
+        ends_on:
+          type: [string, 'null']
+          format: date
+    EmployeeSchedule:
+      allOf:
+        - $ref: '#/components/schemas/EmployeeScheduleCreate'
+        - type: object
+          required: [employee_id]
+          properties:
+            employee_id:
+              type: string
+              format: uuid
+    TimeEventCreate:
+      type: object
+      required: [event_type, occurred_at, source]
+      properties:
+        event_type:
+          type: string
+          enum: [ENTRADA, SAIDA]
+        occurred_at:
+          type: string
+          format: date-time
+        source:
+          type: string
+          enum: [WEB]
+    TimeEvent:
+      allOf:
+        - $ref: '#/components/schemas/TimeEventCreate'
+        - type: object
+          required: [id, employee_id, work_date, status]
+          properties:
+            id:
+              type: string
+              format: uuid
+            employee_id:
+              type: string
+              format: uuid
+            work_date:
+              type: string
+              format: date
+            status:
+              type: string
+              enum: [VALID, INVALID, REJECTED]
+    DailySummary:
+      type: object
+      required: [work_date, scheduled_minutes, worked_minutes, balance_minutes, status]
+      properties:
+        work_date:
+          type: string
+          format: date
+        scheduled_minutes:
+          type: integer
+        worked_minutes:
+          type: integer
+        balance_minutes:
+          type: integer
+        status:
+          type: string
+          enum: [IN_PROGRESS, COMPLETE, INCONSISTENT]
+    TimeEventResult:
+      type: object
+      required: [event, daily_summary]
+      properties:
+        event:
+          $ref: '#/components/schemas/TimeEvent'
+        daily_summary:
+          $ref: '#/components/schemas/DailySummary'
+    ErrorResponse:
+      type: object
+      required: [error]
+      properties:
+        error:
+          type: object
+          required: [code, message, correlation_id]
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: array
+              items: {}
+            correlation_id:
+              type: string
+    EmployeePage:
+      type: object
+      required: [items, page, page_size, total_items, total_pages]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Employee'
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_items:
+          type: integer
+        total_pages:
+          type: integer
+    TimeEventPage:
+      type: object
+      required: [items, page, page_size, total_items, total_pages]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimeEvent'
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_items:
+          type: integer
+        total_pages:
+          type: integer
+    DailySummaryPage:
+      type: object
+      required: [items, page, page_size, total_items, total_pages]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/DailySummary'
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_items:
+          type: integer
+        total_pages:
+          type: integer

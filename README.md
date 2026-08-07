@@ -15,6 +15,7 @@ O JornadaMS substitui controles manuais de ponto por uma solução centralizada,
 | [Product Vision](docs/vision/ProductVision.md) | Contexto, objetivos, personas, escopo do MVP, roadmap e glossário |
 | [Arquitetura](docs/architecture/architecture.md) | Componentes, camadas, fluxos, segurança e evolução arquitetural |
 | [ADR-001](docs/architecture/adr/ADR-001-modular-monolith.md) | Decisão pelo monólito modular no início do produto |
+| [ADR-002](docs/architecture/adr/ADR-002-mvp-em-incrementos.md) | Decisão de dividir o MVP em dois incrementos |
 | [Requisitos funcionais](docs/requirements/functional-requirements.md) | Capacidades que o sistema deve oferecer |
 | [Requisitos não funcionais](docs/requirements/non-functional-requirements.md) | Metas de qualidade, segurança, desempenho e operação |
 | [Regras de negócio](docs/requirements/business-rules.md) | Regras de jornada, cálculos, ajustes e auditoria |
@@ -23,21 +24,15 @@ O JornadaMS substitui controles manuais de ponto por uma solução centralizada,
 | [Contrato da API](docs/api/openapi.md) | Convenções e endpoints da API privada do MVP |
 | [Diretrizes de UI](docs/ui/figma.md) | Arquitetura de informação, telas e critérios para o Figma |
 | [Roadmap](docs/roadmap/roadmap.md) | Entregas por versão e critérios de saída |
+| [Backlog do MVP-1](docs/roadmap/mvp-1-backlog.md) | Tarefas técnicas e critérios de aceite da primeira fatia vertical |
 
-## Escopo do MVP
+## Escopo incremental
 
-O MVP inclui:
+O [MVP-1](docs/vision/ProductVision.md#10-escopo-do-mvp) entrega login, cadastro de colaboradores, jornada simples, entrada, saída, histórico, validação de sequência, cálculo diário básico e auditoria mínima.
 
-- cadastro de empresas, filiais, departamentos, cargos e colaboradores;
-- definição de jornadas, horários, tolerâncias e escalas simples;
-- registro de entrada, início do intervalo, retorno e saída;
-- cálculo de horas trabalhadas, horas extras, atrasos e banco de horas;
-- justificativas, ajustes com aprovação e histórico de alterações;
-- relatórios diário, semanal e mensal, com exportação para Excel e PDF;
-- dashboard básico de jornada;
-- login, RBAC, sessões, logs e auditoria.
+O MVP-2 adiciona intervalo, justificativas, ajustes, aprovações, banco de horas, relatórios, exportações, dashboard e auditoria administrativa avançada.
 
-Ficam fora do MVP reconhecimento facial, dispositivos biométricos, RFID, QR Code, integrações com ERP ou folha, API pública, aplicativo mobile nativo, notificações em tempo real, multiempresa como capacidade de isolamento entre clientes e multiidioma. A lista completa está em [Product Vision](docs/vision/ProductVision.md#12-fora-do-escopo-do-mvp).
+O MVP será implantado para uma única organização. Empresas e filiais permanecem no modelo como estrutura organizacional, mas não existe isolamento SaaS entre clientes. Reconhecimento facial, dispositivos biométricos, RFID, QR Code, integrações externas, API pública, aplicativo mobile, notificações em tempo real e multiidioma continuam fora do escopo.
 
 ## Arquitetura resumida
 
@@ -74,4 +69,4 @@ tests/               Testes automatizados
 
 ## Próximo passo
 
-Com a documentação base concluída, o próximo incremento recomendado é transformar os requisitos Must do MVP em backlog técnico, começando pelo módulo de identidade, cadastro de colaboradores, registro de eventos e motor de cálculo.
+Com a documentação refinada, o próximo incremento recomendado é transformar o MVP-1 em backlog técnico e implementar a fatia vertical `login → colaborador → entrada/saída → resumo diário → testes`.

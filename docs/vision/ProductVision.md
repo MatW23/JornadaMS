@@ -353,103 +353,77 @@ O JornadaMS não se limita ao controle eletrônico de ponto. Sua proposta de val
 
 ### Objetivo
 
-O MVP (Minimum Viable Product) do JornadaMS tem como objetivo disponibilizar uma versão funcional da plataforma capaz de substituir o processo manual de registro de jornada por um sistema corporativo confiável, centralizado e auditável.
+O MVP (Minimum Viable Product) será dividido em dois incrementos para validar primeiro o fluxo essencial e reduzir o risco de implementação. A primeira implantação será destinada a uma única organização, com cadastro de empresas e filiais apenas como estrutura organizacional. Não haverá isolamento SaaS entre clientes no MVP.
 
-Esta primeira versão deverá contemplar apenas as funcionalidades essenciais para validação do produto em ambiente real, priorizando estabilidade, usabilidade e qualidade da informação.
+### MVP-1 — Registro básico de jornada
 
-### Funcionalidades Incluídas
-**Gestão de Usuários**
-Cadastro de colaboradores.
-Cadastro de departamentos.
-Cadastro de cargos.
-Cadastro de empresas.
-Cadastro de filiais.
-Cadastro do identificador (emoji) utilizado pelo colaborador.
-Ativação e desativação de colaboradores.
+O MVP-1 deve entregar o menor fluxo completo possível:
 
-**Registro de Jornada**
-Registro de entrada.
-Registro de início do intervalo.
-Registro de retorno do intervalo.
-Registro de saída.
-Validação da sequência dos registros.
-Registro da data e horário do evento.
-Registro do dispositivo utilizado (quando aplicável).
+**Acesso e cadastro**
 
-**Gestão da Jornada**
-Definição de jornadas de trabalho.
-Configuração de horários.
-Configuração de tolerâncias.
-Controle de banco de horas.
-Configuração de escalas simples.
+- login, logout e renovação de sessão;
+- cadastro e ativação/desativação de colaboradores;
+- configuração de uma jornada simples;
+- RBAC mínimo para administrador e colaborador.
 
-**Motor de Cálculo**
-Cálculo das horas trabalhadas.
-Cálculo de horas extras.
-Cálculo de atrasos.
-Cálculo de banco de horas.
-Identificação de inconsistências.
+**Registro**
 
-**Recursos Humanos**
-Consulta da jornada dos colaboradores.
-Ajuste manual de registros.
-Registro de justificativas.
-Aprovação de ajustes.
-Histórico de alterações.
+- registro de entrada e saída;
+- validação de sequência;
+- registro de data/hora, fuso, origem e correlação;
+- proteção contra duplicidade e concorrência.
 
-**Relatórios**
-Relatório diário.
-Relatório semanal.
-Relatório mensal.
-Exportação para Excel.
-Exportação para PDF.
+**Cálculo**
 
-**Dashboard**
-Indicadores básicos de jornada.
-Horas extras.
-Banco de horas.
-Atrasos.
-Absenteísmo.
+- cálculo diário básico das horas trabalhadas;
+- identificação de registro incompleto ou inválido;
+- consulta do histórico pelo colaborador;
+- auditoria básica de login, cadastro e registro de ponto.
 
-**Segurança**
-Login.
-Controle de acesso baseado em papéis (RBAC).
-Auditoria das alterações.
-Registro de logs.
-Controle de sessões.
+### MVP-2 — Gestão administrativa
 
-### Funcionalidades Não Incluídas no MVP
+Após validar o MVP-1, entram:
 
-Nesta primeira versão, não serão desenvolvidas funcionalidades cuja implementação agregaria elevada complexidade sem comprometer a validação da proposta de valor do produto.
+- um intervalo configurável por jornada;
+- tolerâncias e atrasos;
+- justificativas, ajustes e aprovação;
+- banco de horas e horas extras;
+- consulta da jornada por gestores e RH;
+- relatórios diário, semanal e mensal;
+- exportação para Excel e PDF;
+- dashboard básico;
+- auditoria administrativa avançada.
 
-Entre elas:
+### Premissas de implementação do MVP-1
 
-Reconhecimento facial.
-Integração com dispositivos biométricos.
-Integração com RFID.
-Registro por QR Code.
-Integração com sistemas ERP.
-Integração com folha de pagamento.
-API pública.
-Aplicativo mobile.
-Notificações em tempo real.
-Multiempresa.
-Multiidioma.
+- jornadas não atravessam a meia-noite;
+- cada colaborador possui uma jornada simples vigente;
+- o cálculo usa somente entrada e saída;
+- há um fuso horário por filial;
+- não há feriados, folgas, afastamentos ou fechamento automático;
+- alterações retroativas não são permitidas sem fluxo explícito;
+- um colaborador pode existir sem usuário de acesso, mas somente um colaborador com usuário ativo pode registrar ponto.
 
-Essas funcionalidades serão avaliadas para versões futuras do JornadaMS.
+### Funcionalidades não incluídas no MVP
 
-### Critérios para Conclusão do MVP
+No MVP-1, ficam fora do escopo as capacidades do MVP-2 e as evoluções seguintes, além de:
 
-O MVP será considerado concluído quando:
+- reconhecimento facial;
+- integração com dispositivos biométricos;
+- integração com RFID;
+- registro por QR Code;
+- integração com sistemas ERP ou folha de pagamento;
+- API pública;
+- aplicativo mobile;
+- notificações em tempo real;
+- isolamento multiempresa;
+- multiidioma.
 
-Todos os cadastros essenciais estiverem implementados.
-O registro eletrônico de ponto estiver funcional.
-O cálculo da jornada ocorrer automaticamente.
-O sistema gerar relatórios básicos.
-O controle de acesso estiver implementado.
-As operações críticas forem auditáveis.
-Os testes essenciais estiverem aprovados.
-A aplicação estiver apta para utilização em ambiente real.
+### Critérios para conclusão
+
+O MVP-1 será considerado concluído quando login, cadastro de colaborador, jornada simples, entrada, saída, cálculo diário, histórico, RBAC mínimo, auditoria básica e testes essenciais estiverem funcionando em ambiente de validação.
+
+O MVP-2 será considerado concluído quando justificativas, ajustes, aprovação, intervalo, banco de horas, relatórios e dashboard estiverem implementados, testados e validados com usuários de RH.
 
 ## 11. Funcionalidades Futuras
 Visão de Evolução

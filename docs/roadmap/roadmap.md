@@ -4,11 +4,19 @@ O roadmap detalhado de produto está na [Product Vision](../vision/ProductVision
 
 ## 1.0 — MVP
 
-**Objetivo:** substituir o processo manual de registro de jornada.
+**Objetivo:** substituir o processo manual de registro de jornada em dois incrementos controlados.
 
-**Entregas:** cadastro organizacional e de colaboradores, jornadas simples, registro de ponto, motor de cálculo, justificativas, ajustes com aprovação, relatórios básicos, dashboard, login, RBAC e auditoria.
+### MVP-1 — Registro básico
 
-**Critérios de saída:** registros funcionais em ambiente real, cálculos essenciais aprovados, relatórios gerados, operações críticas auditáveis, testes essenciais aprovados e validação com usuários representativos.
+**Entregas:** login, logout, sessões, cadastro de colaboradores, jornada simples, entrada, saída, validação de sequência, cálculo diário básico, histórico, RBAC mínimo e auditoria básica.
+
+**Critérios de saída:** usuário autenticado consegue registrar entrada e saída uma única vez por operação, consultar o resumo diário e obter resultado consistente sob reenvio e concorrência.
+
+### MVP-2 — Gestão administrativa
+
+**Entregas:** intervalo, tolerâncias, atrasos, justificativas, ajustes, aprovação, banco de horas, horas extras, relatórios, exportações, dashboard e auditoria avançada.
+
+**Critérios de saída:** regras administrativas validadas por RH, relatórios conferidos, operações críticas auditáveis, testes essenciais aprovados e validação com usuários representativos.
 
 ## 1.5 — Expansão operacional
 

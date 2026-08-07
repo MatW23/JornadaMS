@@ -22,6 +22,8 @@ As metas abaixo são referências para validação e podem ser revisadas quando 
 | NFR-014 | Acessibilidade | Atender boas práticas WCAG 2.1 AA para navegação, contraste, foco, formulários e mensagens de erro. | Auditoria automatizada e teste manual por teclado. |
 | NFR-015 | Compatibilidade | Funcionar nas versões atuais dos principais navegadores desktop e mobile web suportados pela organização. | Matriz de compatibilidade definida antes do aceite. |
 | NFR-016 | Portabilidade | Executar de forma consistente em containers e por configuração externa. | Build reproduzível e execução em ambiente limpo. |
+| NFR-017 | Concorrência | Duas requisições simultâneas de registro para o mesmo colaborador e data não podem produzir dois estados válidos conflitantes. | Teste concorrente com bloqueio transacional e verificação de unicidade. |
+| NFR-018 | Sessões | Logout e revogação devem invalidar o refresh token persistido; refresh tokens não podem ser armazenados em texto puro. | Testes de expiração, rotação, revogação e inspeção do banco. |
 
 ## 2. Requisitos de segurança
 
@@ -31,6 +33,7 @@ As metas abaixo são referências para validação e podem ser revisadas quando 
 4. Exportações devem respeitar o mesmo escopo de autorização das consultas.
 5. Dados de auditoria não devem ser editáveis por usuários comuns.
 6. Dependências devem ser avaliadas e atualizadas por processo definido.
+7. O mecanismo de refresh deve usar token opaco rotativo e hash persistido em `sessions`.
 
 ## 3. Estratégia de medição
 

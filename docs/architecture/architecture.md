@@ -57,7 +57,7 @@ flowchart TB
 
 | Módulo | Responsabilidades principais | Dependências permitidas |
 | --- | --- | --- |
-| Identidade e acesso | Usuários, credenciais, sessões, papéis e permissões | Auditoria |
+| Identidade e acesso | Usuários, credenciais, sessões, papéis e permissões | Porta de auditoria |
 | Administração | Empresa, filial, departamento, cargo e parâmetros | Identidade |
 | Colaboradores | Cadastro e vínculo organizacional | Administração, identidade |
 | Jornada | Jornadas, horários, tolerâncias e escalas simples | Administração |
@@ -66,9 +66,13 @@ flowchart TB
 | RH | Justificativas, ajustes e aprovações | Colaboradores, registro, cálculo, identidade |
 | Relatórios | Consultas e exportações diário/semanal/mensal | Registro, cálculo, colaboradores |
 | Analytics | Indicadores básicos do dashboard | Relatórios, cálculo |
-| Auditoria | Registro imutável de operações críticas | Identidade |
+| Auditoria | Registro imutável de operações críticas | Nenhuma entidade de Identidade; recebe `actor_id` como referência lógica |
 
 Os módulos devem manter suas entidades e serviços internos encapsulados. Integrações entre módulos devem ocorrer por interfaces de aplicação, eventos de domínio ou consultas explicitamente definidas.
+
+### Dependência da auditoria
+
+Identidade não importa o módulo de Auditoria diretamente: publica operações por uma porta de auditoria. O módulo de Auditoria grava somente o identificador lógico do ator (`actor_id`) e metadados da operação. Assim, a auditoria pode registrar login e falha de login sem depender de entidades, repositórios ou serviços de Identidade, evitando uma dependência circular.
 
 ## 6. Fluxos principais
 
@@ -106,6 +110,9 @@ sequenceDiagram
 
 - PostgreSQL é a fonte transacional dos registros de jornada.
 - Registro de evento, atualização do resumo diário e auditoria devem ocorrer na mesma transação quando fizerem parte da mesma operação crítica.
+- O registro de ponto deve adquirir um bloqueio lógico por `employee_id + work_date` antes de validar a sequência, usando `SELECT ... FOR UPDATE` ou advisory lock equivalente.
+- A chave de idempotência deve ser única no escopo do colaborador e, quando repetida com o mesmo payload, retornar o resultado original sem nova gravação.
+- A mesma chave com payload diferente deve retornar `409 Conflict`.
 - Valores de data/hora devem ser armazenados em UTC e apresentados no fuso configurado da organização.
 - Identificadores devem ser gerados pelo sistema e ser estáveis; UUID é a referência recomendada.
 - Consultas de relatório devem usar filtros por período, colaborador, departamento e filial.
@@ -159,4 +166,4 @@ Microsserviços não são um requisito do MVP. A extração de um módulo deve s
 
 ## 12. Decisões pendentes
 
-Antes da implementação definitiva, devem ser confirmados: estratégia de implantação inicial, provedor de identidade, política de retenção, RPO/RTO, regras para jornadas que atravessam a meia-noite, arredondamento e parâmetros trabalhistas aplicáveis.
+O MVP-1 já fecha jornada no mesmo dia, entrada/saída, cálculo em minutos, um fuso por filial e ausência de fechamento automático. Antes do MVP-2, devem ser confirmados política de intervalos, arredondamento, tolerâncias, jornadas que atravessam a meia-noite, feriados, parâmetros trabalhistas, retenção, RPO/RTO e estratégia de implantação definitiva.

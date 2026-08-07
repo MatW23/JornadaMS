@@ -4,6 +4,8 @@
 
 Os requisitos abaixo descrevem o comportamento esperado do MVP. `Must` é necessário para a primeira versão; `Should` é importante, mas pode ser priorizado após o núcleo; `Future` pertence a uma evolução posterior.
 
+Neste documento, “primeira versão” significa o MVP-1. Requisitos `Should` formam o MVP-2 e só devem entrar depois que a fatia de registro básico estiver validada.
+
 ## 2. Atores
 
 | Ator | Descrição |
@@ -29,46 +31,46 @@ Os requisitos abaixo descrevem o comportamento esperado do MVP. `Must` é necess
 | ID | Prioridade | Requisito | Critério de aceite |
 | --- | --- | --- | --- |
 | FR-005 | Must | RH/admin deve cadastrar, consultar, editar, ativar e desativar colaboradores. | Colaborador inativo não pode registrar ponto; histórico permanece preservado. |
-| FR-006 | Must | RH/admin deve manter empresas, filiais, departamentos e cargos. | Cada cadastro possui identificador, nome, status e histórico de criação/alteração. |
-| FR-007 | Must | RH deve definir jornada, horários, tolerâncias e escala simples. | Uma configuração ativa pode ser vinculada ao colaborador e usada pelo cálculo. |
+| FR-006 | Should | RH/admin deve manter empresas, filiais, departamentos e cargos. | Cada cadastro possui identificador, nome, status e histórico de criação/alteração. No MVP-1, uma organização e uma estrutura mínima podem ser provisionadas. |
+| FR-007 | Must | RH deve definir uma jornada simples no mesmo dia, com entrada e saída. | Uma configuração ativa pode ser vinculada ao colaborador e usada pelo cálculo. Intervalo, tolerância e escalas entram no MVP-2. |
 | FR-008 | Must | O sistema deve validar campos obrigatórios e unicidade dos cadastros. | Duplicidades e dados inválidos são rejeitados com mensagem acionável. |
 
 ## 5. Registro e cálculo da jornada
 
 | ID | Prioridade | Requisito | Critério de aceite |
 | --- | --- | --- | --- |
-| FR-009 | Must | Colaborador deve registrar entrada, início de intervalo, retorno e saída. | Cada evento válido é persistido com data/hora, usuário e metadados disponíveis. |
+| FR-009 | Must | Colaborador deve registrar entrada e saída; intervalos serão adicionados no MVP-2. | Cada evento válido é persistido com data/hora, usuário e metadados disponíveis. |
 | FR-010 | Must | O sistema deve validar a sequência dos eventos. | Evento fora de ordem é recusado ou marcado como inconsistência conforme a regra aplicável. |
 | FR-011 | Must | O sistema deve impedir duplicidade acidental de um mesmo registro. | Reenvio da mesma operação não cria um segundo evento. |
-| FR-012 | Must | O sistema deve calcular horas trabalhadas, atrasos, horas extras e saldo. | O resumo do dia é atualizado após evento, ajuste aprovado ou mudança válida de configuração. |
+| FR-012 | Must | O sistema deve calcular as horas trabalhadas e o saldo diário básico a partir de entrada e saída. | O resumo do dia é atualizado após evento válido. Atrasos, horas extras e banco de horas entram no MVP-2. |
 | FR-013 | Must | O sistema deve identificar inconsistências de jornada. | O colaborador/RH consegue visualizar o motivo e o status da inconsistência. |
-| FR-014 | Must | O colaborador deve consultar a própria jornada e o banco de horas. | A consulta mostra eventos, resumo diário e saldo no período selecionado. |
-| FR-015 | Must | Gestor/RH deve consultar a jornada dos colaboradores permitidos. | O resultado respeita o escopo organizacional e as permissões do solicitante. |
+| FR-014 | Must | O colaborador deve consultar a própria jornada e o resumo diário. | A consulta mostra entrada, saída, horas trabalhadas e status no período selecionado. Banco de horas entra no MVP-2. |
+| FR-015 | Should | Gestor/RH deve consultar a jornada dos colaboradores permitidos. | O resultado respeita o escopo organizacional e as permissões do solicitante. |
 
 ## 6. Justificativas, ajustes e aprovação
 
 | ID | Prioridade | Requisito | Critério de aceite |
 | --- | --- | --- | --- |
-| FR-016 | Must | Colaborador ou RH deve registrar justificativa para atraso, ausência ou inconsistência. | Justificativa contém motivo, data, autor, status e histórico de decisão. |
-| FR-017 | Must | Usuário autorizado deve solicitar ajuste sem apagar o registro original. | A solicitação mantém valor anterior, novo valor proposto e justificativa. |
-| FR-018 | Must | Gestor/RH autorizado deve aprovar ou rejeitar ajustes. | Decisão exige autor e data; aprovação dispara recálculo; rejeição mantém o valor original. |
-| FR-019 | Must | O sistema deve exibir histórico de alterações de uma jornada. | Cada versão mostra antes, depois, motivo, autor e decisão. |
+| FR-016 | Should | Colaborador ou RH deve registrar justificativa para atraso, ausência ou inconsistência. | Justificativa contém motivo, data, autor, status e histórico de decisão. |
+| FR-017 | Should | Usuário autorizado deve solicitar ajuste sem apagar o registro original. | A solicitação mantém valor anterior, novo valor proposto e justificativa. |
+| FR-018 | Should | Gestor/RH autorizado deve aprovar ou rejeitar ajustes. | Decisão exige autor e data; aprovação dispara recálculo; rejeição mantém o valor original. |
+| FR-019 | Should | O sistema deve exibir histórico de alterações de uma jornada. | Cada versão mostra antes, depois, motivo, autor e decisão. |
 
 ## 7. Consultas, relatórios e indicadores
 
 | ID | Prioridade | Requisito | Critério de aceite |
 | --- | --- | --- | --- |
-| FR-020 | Must | O sistema deve gerar relatório diário, semanal e mensal. | Relatórios permitem filtrar período e escopo autorizado. |
-| FR-021 | Must | O sistema deve exportar relatórios para Excel e PDF. | Arquivo exportado contém período, filtros aplicados, geração e dados exibidos na consulta. |
-| FR-022 | Must | O sistema deve apresentar dashboard básico de jornada. | Dashboard exibe horas extras, banco de horas, atrasos e absenteísmo conforme período. |
+| FR-020 | Should | O sistema deve gerar relatório diário, semanal e mensal. | Relatórios permitem filtrar período e escopo autorizado. |
+| FR-021 | Should | O sistema deve exportar relatórios para Excel e PDF. | Arquivo exportado contém período, filtros aplicados, geração e dados exibidos na consulta. |
+| FR-022 | Should | O sistema deve apresentar dashboard básico de jornada. | Dashboard exibe horas extras, banco de horas, atrasos e absenteísmo conforme período. |
 | FR-023 | Should | O sistema deve permitir busca e ordenação em listas administrativas. | Filtros podem ser combinados e são refletidos no resultado. |
 
 ## 8. Auditoria e operação
 
 | ID | Prioridade | Requisito | Critério de aceite |
 | --- | --- | --- | --- |
-| FR-024 | Must | O sistema deve auditar operações críticas. | Login, cadastro, ajuste, aprovação, exportação e mudança de configuração geram evento de auditoria. |
-| FR-025 | Must | Administrador deve consultar logs e eventos de auditoria autorizados. | Consulta permite filtrar por usuário, tipo, entidade e período. |
+| FR-024 | Must | O sistema deve auditar operações críticas do MVP-1 e, depois, operações administrativas. | No MVP-1, login, cadastro de colaborador e registro de ponto geram evento de auditoria; o restante entra no MVP-2. |
+| FR-025 | Should | Administrador deve consultar logs e eventos de auditoria autorizados. | Consulta permite filtrar por usuário, tipo, entidade e período. |
 | FR-026 | Must | O sistema deve informar falhas de forma compreensível. | Erros possuem código, mensagem segura e correlação para suporte. |
 | FR-027 | Future | O sistema poderá integrar ERP, folha, dispositivos e APIs públicas. | A integração será especificada em versão própria, fora do MVP. |
 
