@@ -1,0 +1,44 @@
+<mxfile host="app.diagrams.net" modified="2026-08-07T00:00:00.000Z" agent="JornadaMS" version="24.7.17">
+  <diagram id="jornada-ms-erd" name="JornadaMS ERD">
+    <mxGraphModel dx="1422" dy="794" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1600" pageHeight="1200" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+        <mxCell id="companies" value="&lt;b&gt;companies&lt;/b&gt;&lt;br&gt;id PK&lt;br&gt;name&lt;br&gt;timezone&lt;br&gt;status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="40" y="40" width="170" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="branches" value="&lt;b&gt;branches&lt;/b&gt;&lt;br&gt;id PK&lt;br&gt;company_id FK&lt;br&gt;name&lt;br&gt;timezone" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+          <mxGeometry x="280" y="40" width="170" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="employees" value="&lt;b&gt;employees&lt;/b&gt;&lt;br&gt;id PK&lt;br&gt;user_id FK&lt;br&gt;branch_id FK&lt;br&gt;department_id FK&lt;br&gt;status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+          <mxGeometry x="520" y="40" width="190" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="users" value="&lt;b&gt;users&lt;/b&gt;&lt;br&gt;id PK&lt;br&gt;email&lt;br&gt;password_hash&lt;br&gt;status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+          <mxGeometry x="40" y="250" width="170" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="schedules" value="&lt;b&gt;work_schedules&lt;/b&gt;&lt;br&gt;id PK&lt;br&gt;name&lt;br&gt;tolerance&lt;br&gt;status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="280" y="250" width="190" height="110" as="geometry"/>
+        </mxCell>
+        <mxCell id="events" value="&lt;b&gt;time_events&lt;/b&gt;&lt;br&gt;id PK&lt;br&gt;employee_id FK&lt;br&gt;event_type&lt;br&gt;occurred_at&lt;br&gt;idempotency_key" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="520" y="250" width="190" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="summaries" value="&lt;b&gt;daily_summaries&lt;/b&gt;&lt;br&gt;id PK&lt;br&gt;employee_id FK&lt;br&gt;work_date&lt;br&gt;worked_minutes&lt;br&gt;balance_minutes" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+          <mxGeometry x="780" y="250" width="200" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="adjustments" value="&lt;b&gt;adjustment_requests&lt;/b&gt;&lt;br&gt;id PK&lt;br&gt;time_event_id FK&lt;br&gt;justification_id FK&lt;br&gt;status&lt;br&gt;decided_by FK" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="780" y="470" width="210" height="130" as="geometry"/>
+        </mxCell>
+        <mxCell id="audit" value="&lt;b&gt;audit_events&lt;/b&gt;&lt;br&gt;id PK&lt;br&gt;actor_id FK&lt;br&gt;action&lt;br&gt;entity_type&lt;br&gt;occurred_at" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+          <mxGeometry x="520" y="470" width="190" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="e1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;" edge="1" parent="1" source="companies" target="branches"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;" edge="1" parent="1" source="branches" target="employees"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;" edge="1" parent="1" source="users" target="employees"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;" edge="1" parent="1" source="employees" target="events"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;" edge="1" parent="1" source="employees" target="summaries"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;" edge="1" parent="1" source="events" target="adjustments"><mxGeometry relative="1" as="geometry"/></mxCell>
+        <mxCell id="e7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;endArrow=none;" edge="1" parent="1" source="users" target="audit"><mxGeometry relative="1" as="geometry"/></mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
