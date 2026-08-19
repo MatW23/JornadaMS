@@ -60,6 +60,23 @@ tests/               Testes automatizados
 3. Use as [regras de negócio](docs/requirements/business-rules.md) como fonte para o domínio.
 4. Consulte a [arquitetura](docs/architecture/architecture.md), o [modelo de dados](docs/database/model.md) e o [contrato da API](docs/api/openapi.md) durante a implementação.
 
+## Desenvolvimento local
+
+Pré-requisitos: Python 3.12+, Docker e Docker Compose.
+
+```powershell
+Copy-Item .env.example .env
+docker compose up -d db
+py -m venv .venv
+.\.venv\Scripts\Activate.ps1
+python -m pip install -e ".[dev]"
+alembic upgrade head
+pytest
+uvicorn jornada_ms.main:app --reload
+```
+
+A API fica disponível em `http://localhost:8000`; a documentação interativa do FastAPI fica em `/docs`. Os health checks são `GET /health/live` e `GET /health/ready`.
+
 ## Convenções de documentação
 
 - Requisitos, regras e casos de uso possuem identificadores estáveis (`FR`, `NFR`, `BR` e `UC`).

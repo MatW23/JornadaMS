@@ -4,17 +4,18 @@ info:
   version: 1.0.0-mvp1
   description: API REST privada do MVP-1 do JornadaMS.
 servers:
-  - url: http://localhost:8000/api/v1
+  - url: http://localhost:8000
     description: Desenvolvimento local
 tags:
   - name: Auth
   - name: Employees
   - name: Schedules
   - name: Attendance
+  - name: Health
 security:
   - BearerAuth: []
 paths:
-  /auth/login:
+  /api/v1/auth/login:
     post:
       tags: [Auth]
       operationId: login
@@ -35,7 +36,9 @@ paths:
                 $ref: '#/components/schemas/LoginResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
-  /auth/refresh:
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /api/v1/auth/refresh:
     post:
       tags: [Auth]
       operationId: refreshSession
@@ -56,7 +59,7 @@ paths:
                 $ref: '#/components/schemas/LoginResponse'
         '401':
           $ref: '#/components/responses/Unauthorized'
-  /auth/logout:
+  /api/v1/auth/logout:
     post:
       tags: [Auth]
       operationId: logout
@@ -66,7 +69,7 @@ paths:
           description: Sessão revogada
         '401':
           $ref: '#/components/responses/Unauthorized'
-  /me:
+  /api/v1/me:
     get:
       tags: [Auth]
       operationId: getCurrentUser
@@ -80,7 +83,7 @@ paths:
                 $ref: '#/components/schemas/UserContext'
         '401':
           $ref: '#/components/responses/Unauthorized'
-  /employees:
+  /api/v1/employees:
     get:
       tags: [Employees]
       operationId: listEmployees
@@ -91,7 +94,7 @@ paths:
         - in: query
           name: status
           schema:
-            $ref: '#/components/schemas/UserStatus'
+            $ref: '#/components/schemas/EmployeeStatus'
       responses:
         '200':
           description: Lista de colaboradores
@@ -103,6 +106,8 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
     post:
       tags: [Employees]
       operationId: createEmployee
@@ -126,7 +131,9 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '409':
           $ref: '#/components/responses/Conflict'
-  /employees/{employee_id}:
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/employees/{employee_id}:
     parameters:
       - $ref: '#/components/parameters/EmployeeId'
     get:
@@ -142,6 +149,8 @@ paths:
                 $ref: '#/components/schemas/Employee'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
     patch:
@@ -167,7 +176,9 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
-  /work-schedules:
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/work-schedules:
     post:
       tags: [Schedules]
       operationId: createWorkSchedule
@@ -189,7 +200,9 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
-  /employees/{employee_id}/schedules:
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/employees/{employee_id}/schedules:
     post:
       tags: [Schedules]
       operationId: assignEmployeeSchedule
@@ -215,7 +228,9 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '409':
           $ref: '#/components/responses/Conflict'
-  /time-events:
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/time-events:
     post:
       tags: [Attendance]
       operationId: createTimeEvent
@@ -243,6 +258,8 @@ paths:
                 $ref: '#/components/schemas/TimeEventResult'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
         '409':
           $ref: '#/components/responses/Conflict'
         '422':
@@ -264,6 +281,12 @@ paths:
           schema:
             type: string
             format: date
+        - in: query
+          name: employee_id
+          required: false
+          schema:
+            type: string
+            format: uuid
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PageSize'
       responses:
@@ -275,7 +298,9 @@ paths:
                 $ref: '#/components/schemas/TimeEventPage'
         '401':
           $ref: '#/components/responses/Unauthorized'
-  /attendance/days:
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /api/v1/attendance/days:
     get:
       tags: [Attendance]
       operationId: listDailySummaries
@@ -293,6 +318,12 @@ paths:
           schema:
             type: string
             format: date
+        - in: query
+          name: employee_id
+          required: false
+          schema:
+            type: string
+            format: uuid
         - $ref: '#/components/parameters/Page'
         - $ref: '#/components/parameters/PageSize'
       responses:
@@ -304,24 +335,34 @@ paths:
                 $ref: '#/components/schemas/DailySummaryPage'
         '401':
           $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /health/live:
     get:
-      tags: [Auth]
+      tags: [Health]
       operationId: healthLive
       security: []
       responses:
         '200':
           description: Processo ativo
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
   /health/ready:
     get:
-      tags: [Auth]
+      tags: [Health]
       operationId: healthReady
       security: []
       responses:
         '200':
           description: Dependências disponíveis
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
         '503':
-          description: Dependência indisponível
+          $ref: '#/components/responses/ServiceUnavailable'
 components:
   securitySchemes:
     BearerAuth:
@@ -390,6 +431,18 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorResponse'
+    TooManyRequests:
+      description: Limite de tentativas ou requisições excedido
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    ServiceUnavailable:
+      description: Dependência indisponível
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
   schemas:
     LoginRequest:
       type: object
@@ -438,9 +491,19 @@ components:
         employee_id:
           type: [string, 'null']
           format: uuid
-    UserStatus:
+    EmployeeStatus:
       type: string
       enum: [ACTIVE, INACTIVE]
+    ScheduleStatus:
+      type: string
+      enum: [ACTIVE, INACTIVE]
+    HealthResponse:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [ok, ready]
     EmployeeCreate:
       type: object
       required: [name, registration_code, branch_id]
@@ -499,7 +562,7 @@ components:
               type: string
               format: uuid
             status:
-              $ref: '#/components/schemas/UserStatus'
+              $ref: '#/components/schemas/EmployeeStatus'
     WorkScheduleCreate:
       type: object
       required: [name, start_time, end_time]
@@ -529,8 +592,7 @@ components:
               type: string
               format: uuid
             status:
-              type: string
-              enum: [ACTIVE, INACTIVE]
+              $ref: '#/components/schemas/ScheduleStatus'
     EmployeeScheduleCreate:
       type: object
       required: [schedule_id, starts_on]

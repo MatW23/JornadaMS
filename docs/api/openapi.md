@@ -7,6 +7,7 @@ Este documento explica o contrato da API REST privada usada pela aplicação web
 ## 2. Convenções
 
 - Base URL: `/api/v1`.
+- Health checks operacionais ficam fora da versão da API: `/health/live` e `/health/ready`.
 - JSON UTF-8 em requisições e respostas.
 - Autenticação: `Authorization: Bearer <jwt>`.
 - Datas: ISO 8601; persistência em UTC e apresentação no fuso da organização.
@@ -22,7 +23,8 @@ TimeEventType = ENTRADA | SAIDA
 TimeEventSource = WEB
 TimeEventStatus = VALID | INVALID | REJECTED
 DailySummaryStatus = IN_PROGRESS | COMPLETE | INCONSISTENT
-UserStatus = ACTIVE | INACTIVE
+EmployeeStatus = ACTIVE | INACTIVE
+ScheduleStatus = ACTIVE | INACTIVE
 ```
 
 `POST /employees` recebe `name`, `registration_code`, `punch_identifier` opcional, `branch_id`, `department_id` opcional, `position_id` opcional e `user_id` opcional. `registration_code` é matrícula interna; não é CPF.
@@ -163,7 +165,7 @@ Exportações devem aplicar exatamente o mesmo escopo da consulta que as origino
 Exemplo:
 
 ```text
-GET /api/v1/attendance/days?from=2026-08-01&to=2026-08-31&branch_id=...&page=1&page_size=50
+GET /api/v1/attendance/days?from=2026-08-01&to=2026-08-31&employee_id=...&page=1&page_size=50
 ```
 
 Resposta paginada:
