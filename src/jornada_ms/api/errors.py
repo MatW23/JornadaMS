@@ -46,6 +46,18 @@ def _correlation_id(request: Request) -> str:
     return getattr(request.state, "correlation_id", "unknown")
 
 
+def sanitize_validation_errors(errors: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Keep validation locations and types without echoing submitted values."""
+
+    return [
+        {
+            "loc": [str(part) for part in error.get("loc", ())],
+            "type": str(error.get("type", "validation_error")),
+        }
+        for error in errors
+    ]
+
+
 def _payload(request: Request, code: str, message: str, details: list[Any] | None = None) -> dict:
     return {
         "error": {
@@ -90,7 +102,10 @@ def register_exception_handlers(app) -> None:
         return JSONResponse(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             content=_payload(
-                request, "VALIDATION_ERROR", "Request validation failed", exc.errors()
+                request,
+                "VALIDATION_ERROR",
+                "Request validation failed",
+                sanitize_validation_errors(exc.errors()),
             ),
         )
 

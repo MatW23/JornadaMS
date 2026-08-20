@@ -4,6 +4,8 @@
 
 Este documento explica o contrato da API REST privada usada pela aplicação web. A especificação executável do MVP-1 está em [openapi.yaml](openapi.yaml). Este Markdown documenta decisões, permissões e regras que complementam o arquivo OpenAPI. A API não é pública para terceiros.
 
+As operações marcadas como MVP-1 nas seções abaixo devem estar refletidas no `openapi.yaml`. Operações marcadas como MVP-2 são referências de roadmap e só entrarão na especificação executável quando o respectivo épico começar.
+
 ## 2. Convenções
 
 - Base URL: `/api/v1`.
@@ -81,6 +83,8 @@ Exemplo de login:
 
 ## 5. Cadastros
 
+As operações de empresas, filiais, colaboradores e ativação/desativação do MVP-1 já fazem parte do contrato executável. Detalhes de empresa, departamentos e cargos permanecem planejados para o MVP-2.
+
 | Método | Endpoint | Papel mínimo | Descrição |
 | --- | --- | --- | --- |
 | `GET/POST` | `/companies` | Admin/RH | Listar/criar empresas (provisionamento; MVP-1) |
@@ -139,6 +143,8 @@ Resposta de referência:
 
 ## 7. Justificativas e ajustes
 
+As rotas desta seção são planejadas para o MVP-2 e ainda não fazem parte do `openapi.yaml` executável.
+
 | Método | Endpoint | Papel mínimo | Descrição |
 | --- | --- | --- | --- |
 | `GET/POST` | `/justifications` | Colaborador/RH | Consultar/criar justificativa (MVP-2) |
@@ -149,6 +155,8 @@ Resposta de referência:
 | `GET` | `/employees/{id}/attendance-history` | Escopo autorizado | Consultar histórico e versões (MVP-2) |
 
 ## 8. Relatórios, dashboard e auditoria
+
+As rotas desta seção são planejadas para o MVP-2 e ainda não fazem parte do `openapi.yaml` executável.
 
 | Método | Endpoint | Papel mínimo | Descrição |
 | --- | --- | --- | --- |

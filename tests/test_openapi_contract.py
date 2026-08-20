@@ -12,7 +12,12 @@ def test_openapi_contract_separates_versioned_api_and_health_checks():
 
     assert contract["servers"][0]["url"] == "http://localhost:8000"
     assert "/api/v1/auth/login" in paths
+    assert "/api/v1/companies" in paths
+    assert "/api/v1/branches" in paths
     assert "/api/v1/time-events" in paths
+    assert "/api/v1/employees/{employee_id}/activate" in paths
+    assert "/api/v1/employees/{employee_id}/deactivate" in paths
+    assert "/api/v1/work-schedules/{schedule_id}" in paths
     assert "/health/live" in paths
     assert "/health/ready" in paths
     assert "/auth/login" not in paths

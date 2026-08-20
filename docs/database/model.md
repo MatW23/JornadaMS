@@ -20,6 +20,8 @@ Este modelo representa o núcleo transacional do MVP. Ele prioriza integridade d
 
 ## 3. Entidades principais
 
+A migration `0001_foundation` cria a fundação transacional do MVP-1: organização, identidade, colaboradores, jornadas, marcações, resumos diários e auditoria. `justifications` e `adjustment_requests` permanecem modeladas como evolução do MVP-2 e serão adicionadas em migrations posteriores; o diagrama antecipa esses relacionamentos.
+
 | Entidade | Finalidade | Campos essenciais |
 | --- | --- | --- |
 | `companies` | Empresa cadastrada no sistema | `id`, `name`, `cnpj`, `status`, `default_timezone` |

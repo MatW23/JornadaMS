@@ -77,6 +77,8 @@ uvicorn jornada_ms.main:app --reload
 
 A API fica disponível em `http://localhost:8000`; a documentação interativa do FastAPI fica em `/docs`. Os health checks são `GET /health/live` e `GET /health/ready`.
 
+Estado da implementação: o servidor ainda registra somente os health checks. Os endpoints de negócio descritos no contrato OpenAPI são o alvo do MVP-1 e retornarão `404` até que seus módulos sejam implementados e registrados na aplicação.
+
 ## Convenções de documentação
 
 - Requisitos, regras e casos de uso possuem identificadores estáveis (`FR`, `NFR`, `BR` e `UC`).

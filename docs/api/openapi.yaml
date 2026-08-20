@@ -8,6 +8,7 @@ servers:
     description: Desenvolvimento local
 tags:
   - name: Auth
+  - name: Organization
   - name: Employees
   - name: Schedules
   - name: Attendance
@@ -15,6 +16,94 @@ tags:
 security:
   - BearerAuth: []
 paths:
+  /api/v1/companies:
+    get:
+      tags: [Organization]
+      operationId: listCompanies
+      x-mvp: MVP-1
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Lista de empresas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompanyPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [Organization]
+      operationId: createCompany
+      x-mvp: MVP-1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompanyCreate'
+      responses:
+        '201':
+          description: Empresa criada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Company'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/branches:
+    get:
+      tags: [Organization]
+      operationId: listBranches
+      x-mvp: MVP-1
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Lista de filiais
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BranchPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [Organization]
+      operationId: createBranch
+      x-mvp: MVP-1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BranchCreate'
+      responses:
+        '201':
+          description: Filial criada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Branch'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationError'
   /api/v1/auth/login:
     post:
       tags: [Auth]
@@ -178,7 +267,69 @@ paths:
           $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/ValidationError'
+  /api/v1/employees/{employee_id}/activate:
+    parameters:
+      - $ref: '#/components/parameters/EmployeeId'
+    post:
+      tags: [Employees]
+      operationId: activateEmployee
+      x-mvp: MVP-1
+      responses:
+        '200':
+          description: Colaborador ativado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /api/v1/employees/{employee_id}/deactivate:
+    parameters:
+      - $ref: '#/components/parameters/EmployeeId'
+    post:
+      tags: [Employees]
+      operationId: deactivateEmployee
+      x-mvp: MVP-1
+      responses:
+        '200':
+          description: Colaborador desativado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Employee'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
   /api/v1/work-schedules:
+    get:
+      tags: [Schedules]
+      operationId: listWorkSchedules
+      x-mvp: MVP-1
+      parameters:
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+        - in: query
+          name: status
+          schema:
+            $ref: '#/components/schemas/ScheduleStatus'
+      responses:
+        '200':
+          description: Lista de jornadas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkSchedulePage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
     post:
       tags: [Schedules]
       operationId: createWorkSchedule
@@ -200,6 +351,51 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/work-schedules/{schedule_id}:
+    parameters:
+      - $ref: '#/components/parameters/ScheduleId'
+    get:
+      tags: [Schedules]
+      operationId: getWorkSchedule
+      x-mvp: MVP-1
+      responses:
+        '200':
+          description: Jornada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkSchedule'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [Schedules]
+      operationId: updateWorkSchedule
+      x-mvp: MVP-1
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WorkScheduleUpdate'
+      responses:
+        '200':
+          description: Jornada atualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkSchedule'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
         '422':
           $ref: '#/components/responses/ValidationError'
   /api/v1/employees/{employee_id}/schedules:
@@ -370,6 +566,13 @@ components:
       scheme: bearer
       bearerFormat: JWT
   parameters:
+    ScheduleId:
+      in: path
+      name: schedule_id
+      required: true
+      schema:
+        type: string
+        format: uuid
     EmployeeId:
       in: path
       name: employee_id
@@ -400,6 +603,13 @@ components:
         minimum: 1
         maximum: 100
         default: 50
+    CompanyId:
+      in: path
+      name: company_id
+      required: true
+      schema:
+        type: string
+        format: uuid
   responses:
     Unauthorized:
       description: Não autenticado
@@ -491,6 +701,60 @@ components:
         employee_id:
           type: [string, 'null']
           format: uuid
+    CompanyCreate:
+      type: object
+      required: [name, cnpj, default_timezone]
+      properties:
+        name:
+          type: string
+          minLength: 1
+        cnpj:
+          type: string
+          minLength: 14
+          maxLength: 14
+        default_timezone:
+          type: string
+          minLength: 1
+    Company:
+      allOf:
+        - $ref: '#/components/schemas/CompanyCreate'
+        - type: object
+          required: [id, status]
+          properties:
+            id:
+              type: string
+              format: uuid
+            status:
+              type: string
+              enum: [ACTIVE, INACTIVE]
+    BranchCreate:
+      type: object
+      required: [company_id, name, code, timezone]
+      properties:
+        company_id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          minLength: 1
+        code:
+          type: string
+          minLength: 1
+        timezone:
+          type: string
+          minLength: 1
+    Branch:
+      allOf:
+        - $ref: '#/components/schemas/BranchCreate'
+        - type: object
+          required: [id, status]
+          properties:
+            id:
+              type: string
+              format: uuid
+            status:
+              type: string
+              enum: [ACTIVE, INACTIVE]
     EmployeeStatus:
       type: string
       enum: [ACTIVE, INACTIVE]
@@ -582,6 +846,24 @@ components:
           type: integer
           minimum: 0
           default: 0
+    WorkScheduleUpdate:
+      type: object
+      description: Campos opcionais para atualização parcial da jornada.
+      properties:
+        name:
+          type: string
+          minLength: 1
+        start_time:
+          type: string
+          format: time
+        end_time:
+          type: string
+          format: time
+        same_day_only:
+          type: boolean
+        tolerance_minutes:
+          type: integer
+          minimum: 0
     WorkSchedule:
       allOf:
         - $ref: '#/components/schemas/WorkScheduleCreate'
@@ -695,6 +977,54 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/Employee'
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_items:
+          type: integer
+        total_pages:
+          type: integer
+    CompanyPage:
+      type: object
+      required: [items, page, page_size, total_items, total_pages]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Company'
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_items:
+          type: integer
+        total_pages:
+          type: integer
+    BranchPage:
+      type: object
+      required: [items, page, page_size, total_items, total_pages]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/Branch'
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_items:
+          type: integer
+        total_pages:
+          type: integer
+    WorkSchedulePage:
+      type: object
+      required: [items, page, page_size, total_items, total_pages]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkSchedule'
         page:
           type: integer
         page_size:
