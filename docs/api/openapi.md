@@ -6,6 +6,8 @@ Este documento explica o contrato da API REST privada usada pela aplicação web
 
 As operações marcadas como MVP-1 nas seções abaixo devem estar refletidas no `openapi.yaml`. Operações marcadas como MVP-2 são referências de roadmap e só entrarão na especificação executável quando o respectivo épico começar.
 
+Implementado no servidor neste incremento: `POST /api/v1/auth/login`, `POST /api/v1/auth/refresh`, `POST /api/v1/auth/logout` e `GET /api/v1/me`. As demais operações MVP-1 continuam como contrato de implementação futura.
+
 ## 2. Convenções
 
 - Base URL: `/api/v1`.
@@ -29,7 +31,7 @@ EmployeeStatus = ACTIVE | INACTIVE
 ScheduleStatus = ACTIVE | INACTIVE
 ```
 
-`POST /employees` recebe `name`, `registration_code`, `punch_identifier` opcional, `branch_id`, `department_id` opcional, `position_id` opcional e `user_id` opcional. `registration_code` é matrícula interna; não é CPF.
+`POST /employees` recebe `name`, `registration_code`, `punch_identifier` opcional, `branch_id`, `department_id` opcional, `position_id` opcional e `user_id` opcional. `registration_code` é matrícula interna única por organização; a organização é derivada da filial e não é enviada pelo cliente. Não é CPF.
 
 `POST /work-schedules` no MVP-1 recebe `name`, `start_time`, `end_time`, `same_day_only=true` e `tolerance_minutes=0`. O fuso é herdado da filial do colaborador; não há fuso independente por jornada no MVP-1. Intervalos, tolerâncias efetivas e escalas complexas pertencem ao MVP-2.
 

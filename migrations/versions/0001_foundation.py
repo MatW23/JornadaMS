@@ -92,7 +92,12 @@ def upgrade() -> None:
             "updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()
         ),
         sa.PrimaryKeyConstraint("id"),
-        sa.UniqueConstraint("email"),
+    )
+    op.create_index(
+        "uq_users_email_lower",
+        "users",
+        [sa.text("lower(email)")],
+        unique=True,
     )
     op.create_table(
         "roles",
@@ -132,6 +137,7 @@ def upgrade() -> None:
         "employees",
         sa.Column("id", sa.Uuid(), nullable=False),
         sa.Column("user_id", sa.Uuid(), nullable=True),
+        sa.Column("company_id", sa.Uuid(), nullable=False),
         sa.Column("branch_id", sa.Uuid(), nullable=False),
         sa.Column("department_id", sa.Uuid(), nullable=True),
         sa.Column("position_id", sa.Uuid(), nullable=True),
@@ -146,12 +152,13 @@ def upgrade() -> None:
             "updated_at", sa.DateTime(timezone=True), nullable=False, server_default=sa.func.now()
         ),
         sa.ForeignKeyConstraint(["branch_id"], ["branches.id"]),
+        sa.ForeignKeyConstraint(["company_id"], ["companies.id"]),
         sa.ForeignKeyConstraint(["department_id"], ["departments.id"]),
         sa.ForeignKeyConstraint(["position_id"], ["positions.id"]),
         sa.ForeignKeyConstraint(["user_id"], ["users.id"]),
         sa.PrimaryKeyConstraint("id"),
         sa.UniqueConstraint("user_id"),
-        sa.UniqueConstraint("branch_id", "registration_code"),
+        sa.UniqueConstraint("company_id", "registration_code"),
     )
     op.create_table(
         "work_schedules",
@@ -274,6 +281,7 @@ def downgrade() -> None:
     op.drop_table("sessions")
     op.drop_table("user_roles")
     op.drop_table("roles")
+    op.drop_index("uq_users_email_lower", table_name="users")
     op.drop_table("users")
     op.drop_table("positions")
     op.drop_table("departments")

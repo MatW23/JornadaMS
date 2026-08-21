@@ -2,7 +2,7 @@
 
 Plataforma corporativa para registro, cálculo e gestão da jornada de trabalho.
 
-> Estado atual: documentação funcional e técnica em elaboração; a implementação ainda está em fase de preparação.
+> Estado atual: fundação técnica e módulo de identidade implementados; colaboradores e registro de ponto ainda estão em desenvolvimento.
 
 ## Objetivo
 
@@ -77,7 +77,7 @@ uvicorn jornada_ms.main:app --reload
 
 A API fica disponível em `http://localhost:8000`; a documentação interativa do FastAPI fica em `/docs`. Os health checks são `GET /health/live` e `GET /health/ready`.
 
-Estado da implementação: o servidor ainda registra somente os health checks. Os endpoints de negócio descritos no contrato OpenAPI são o alvo do MVP-1 e retornarão `404` até que seus módulos sejam implementados e registrados na aplicação.
+Estado da implementação: o servidor registra os health checks e o módulo de identidade (`/api/v1/auth/login`, `/api/v1/auth/refresh`, `/api/v1/auth/logout` e `/api/v1/me`). Os endpoints de colaboradores, jornadas, ponto e demais cadastros ainda retornarão `404` até que seus módulos sejam implementados e registrados na aplicação.
 
 ## Convenções de documentação
 
@@ -88,4 +88,4 @@ Estado da implementação: o servidor ainda registra somente os health checks. O
 
 ## Próximo passo
 
-Com a documentação refinada, o próximo incremento recomendado é transformar o MVP-1 em backlog técnico e implementar a fatia vertical `login → colaborador → entrada/saída → resumo diário → testes`.
+Com a identidade em funcionamento, o próximo incremento recomendado é implementar a fatia `colaborador → jornada simples → entrada/saída → resumo diário → testes`.

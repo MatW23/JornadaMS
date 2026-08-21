@@ -7,6 +7,7 @@ from jornada_ms.api.health import router as health_router
 from jornada_ms.api.middleware import CorrelationIdMiddleware
 from jornada_ms.config import Settings, get_settings
 from jornada_ms.db.session import Database
+from jornada_ms.modules.identity.api import router as identity_router
 
 
 def create_app(settings: Settings | None = None) -> FastAPI:
@@ -27,6 +28,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     register_exception_handlers(app)
     app.include_router(health_router)
+    app.include_router(identity_router)
     return app
 
 

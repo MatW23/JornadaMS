@@ -820,9 +820,12 @@ components:
       allOf:
         - $ref: '#/components/schemas/EmployeeCreate'
         - type: object
-          required: [id, status]
+          required: [id, company_id, status]
           properties:
             id:
+              type: string
+              format: uuid
+            company_id:
               type: string
               format: uuid
             status:

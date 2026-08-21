@@ -28,7 +28,7 @@
         <mxCell id="user_roles" value="&lt;b&gt;user_roles&lt;/b&gt;&lt;br&gt;user_id FK&lt;br&gt;role_id FK&lt;br&gt;scope" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
           <mxGeometry x="730" y="220" width="180" height="105" as="geometry"/>
         </mxCell>
-        <mxCell id="employees" value="&lt;b&gt;employees&lt;/b&gt;&lt;br&gt;id PK&lt;br&gt;user_id FK NULLABLE&lt;br&gt;branch_id FK&lt;br&gt;department_id FK&lt;br&gt;position_id FK&lt;br&gt;registration_code&lt;br&gt;punch_identifier&lt;br&gt;status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
+        <mxCell id="employees" value="&lt;b&gt;employees&lt;/b&gt;&lt;br&gt;id PK&lt;br&gt;user_id FK NULLABLE&lt;br&gt;company_id FK&lt;br&gt;branch_id FK&lt;br&gt;department_id FK&lt;br&gt;position_id FK&lt;br&gt;registration_code (unique/company)&lt;br&gt;punch_identifier&lt;br&gt;status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;" vertex="1" parent="1">
           <mxGeometry x="20" y="430" width="230" height="170" as="geometry"/>
         </mxCell>
         <mxCell id="work_schedules" value="&lt;b&gt;work_schedules&lt;/b&gt;&lt;br&gt;id PK&lt;br&gt;name&lt;br&gt;tolerance_minutes&lt;br&gt;interval_count&lt;br&gt;same_day_only&lt;br&gt;status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">

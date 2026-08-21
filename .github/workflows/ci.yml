@@ -28,5 +28,7 @@ jobs:
 
       - name: Validate Alembic migrations
         env:
-          JORNADA_MS_DATABASE_URL: "sqlite+pysqlite:///:memory:"
-        run: alembic upgrade head && alembic downgrade base
+          JORNADA_MS_DATABASE_URL: "sqlite+pysqlite:///./ci-migration.db"
+        run: |
+          alembic upgrade head
+          alembic downgrade base

@@ -2,7 +2,7 @@
 
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -25,7 +25,22 @@ class Settings(BaseSettings):
     )
     database_echo: bool = False
     access_token_expire_seconds: int = Field(default=900, ge=60, le=86_400)
+    refresh_token_expire_seconds: int = Field(default=2_592_000, ge=3_600, le=31_536_000)
+    jwt_secret: str = Field(
+        default="development-only-change-this-jwt-secret-32-chars",
+        min_length=32,
+    )
+    jwt_issuer: str = "jornada-ms"
+    jwt_audience: str = "jornada-ms-web"
     correlation_header: str = "X-Correlation-ID"
+
+    @model_validator(mode="after")
+    def validate_production_secret(self) -> "Settings":
+        if self.environment.lower() in {"production", "prod"} and self.jwt_secret.startswith(
+            "development-only-"
+        ):
+            raise ValueError("JORNADA_MS_JWT_SECRET must be replaced in production")
+        return self
 
 
 @lru_cache(maxsize=1)

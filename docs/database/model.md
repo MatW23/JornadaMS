@@ -14,7 +14,7 @@ Este modelo representa o núcleo transacional do MVP. Ele prioriza integridade d
 - Exclusão lógica para cadastros e registros que precisem permanecer auditáveis.
 - Foreign keys e transações para proteger referências e cálculos.
 - `companies.cnpj` representa o CNPJ normalizado no MVP; CPF não é aceito como documento empresarial.
-- `employees.registration_code` é a matrícula interna; `punch_identifier` é o identificador visual/emoji usado no registro. Nenhum dos dois representa CPF.
+- `employees.registration_code` é a matrícula interna, única no escopo da organização por meio de `company_id`; `punch_identifier` é o identificador visual/emoji usado no registro. Nenhum dos dois representa CPF.
 - Um colaborador pode existir sem usuário de acesso; `user_id` é opcional e único quando informado.
 - `work_schedules.tolerance_minutes` é inteiro em minutos e não é aplicado no MVP-1.
 
@@ -32,7 +32,7 @@ A migration `0001_foundation` cria a fundação transacional do MVP-1: organiza�
 | `sessions` | Sessão e refresh token revogável | `id`, `user_id`, `token_hash`, `expires_at`, `revoked_at`, `last_used_at`, `ip_address`, `user_agent` |
 | `roles` | Papel de acesso | `id`, `name`, `description` |
 | `user_roles` | Relação usuário/papel | `user_id`, `role_id`, `scope` |
-| `employees` | Pessoa vinculada à jornada | `id`, `user_id` opcional, `branch_id`, `department_id`, `position_id`, `name`, `registration_code`, `punch_identifier`, `status` |
+| `employees` | Pessoa vinculada à jornada | `id`, `user_id` opcional, `company_id`, `branch_id`, `department_id`, `position_id`, `name`, `registration_code`, `punch_identifier`, `status` |
 | `work_schedules` | Jornada prevista | `id`, `name`, `tolerance_minutes`, `interval_count`, `same_day_only`, `status` |
 | `schedule_days` | Horários por dia da semana | `id`, `schedule_id`, `weekday`, `start_time`, `break_start`, `break_end`, `end_time` |
 | `employee_schedules` | Vigência da jornada de um colaborador | `employee_id`, `schedule_id`, `starts_on`, `ends_on` |
@@ -70,7 +70,7 @@ erDiagram
 
 - `users.email` deve ser único de forma case-insensitive.
 - `companies.cnpj` deve ser único e armazenado sem pontuação.
-- `employees.registration_code` deve ser único no escopo da organização; `punch_identifier` deve ser único no escopo definido para o registro.
+- `employees.registration_code` deve ser único no escopo da organização (`company_id`); `punch_identifier` deve ser único no escopo definido para o registro.
 - `employees.user_id` é nullable e unique quando informado.
 - `time_events(employee_id, work_date, occurred_at)` deve possuir índice para consultas cronológicas.
 - `time_events(employee_id, idempotency_key)` deve impedir duplicidade quando a chave estiver presente.

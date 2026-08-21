@@ -54,7 +54,7 @@ O MVP-1 é para uma única organização, com jornada no mesmo dia, entrada/saí
 | ID | Tarefa | Critério de aceite |
 | --- | --- | --- |
 | T2.1 | Criar empresa e filial de provisionamento único. | CNPJ normalizado, fuso da filial e unicidade validados. |
-| T2.2 | Criar entidade de colaborador. | `registration_code` é matrícula interna e `user_id` pode ser nulo. |
+| T2.2 | Criar entidade de colaborador. | `registration_code` é matrícula interna única por organização (`company_id`) e `user_id` pode ser nulo. |
 | T2.3 | Implementar criação, consulta, edição, ativação e desativação. | Colaborador inativo não registra ponto; histórico não é apagado. |
 | T2.4 | Vincular usuário ativo ao colaborador quando necessário. | Relação é opcional e única; apenas colaborador com usuário registra ponto. |
 
