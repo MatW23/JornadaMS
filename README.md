@@ -50,6 +50,7 @@ docs/
 ├── ui/              Diretrizes de interface
 └── vision/          Product Vision
 src/jornada_ms/      Código da aplicação
+frontend/             Cliente web inicial
 tests/               Testes automatizados
 ```
 
@@ -71,13 +72,16 @@ py -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -e ".[dev]"
 alembic upgrade head
+jornada-ms-create-user --email admin@empresa.com
 pytest
 uvicorn jornada_ms.main:app --reload
 ```
 
-A API fica disponível em `http://localhost:8000`; a documentação interativa do FastAPI fica em `/docs`. Os health checks são `GET /health/live` e `GET /health/ready`.
+O comando `jornada-ms-create-user` pede a senha de forma interativa e cria o primeiro usuário administrador. Depois, abra `http://localhost:8000/` para acessar a tela web.
 
-Estado da implementação: o servidor registra os health checks e o módulo de identidade (`/api/v1/auth/login`, `/api/v1/auth/refresh`, `/api/v1/auth/logout` e `/api/v1/me`). Os endpoints de colaboradores, jornadas, ponto e demais cadastros ainda retornarão `404` até que seus módulos sejam implementados e registrados na aplicação.
+A aplicação fica disponível em `http://localhost:8000`; a tela web inicial fica em `/` e a documentação interativa do FastAPI fica em `/docs`. Os health checks são `GET /health/live` e `GET /health/ready`.
+
+Estado da implementação: o servidor registra os health checks, o módulo de identidade (`/api/v1/auth/login`, `/api/v1/auth/refresh`, `/api/v1/auth/logout` e `/api/v1/me`) e uma tela web inicial com login e painel. Os endpoints de colaboradores, jornadas, ponto e demais cadastros ainda retornarão `404` até que seus módulos sejam implementados e registrados na aplicação.
 
 ## Convenções de documentação
 

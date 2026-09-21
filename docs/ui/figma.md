@@ -2,7 +2,7 @@
 
 ## 1. Status
 
-Ainda não há um arquivo ou link Figma definido no repositório. Este documento funciona como briefing de interface e checklist de handoff. O link oficial deve ser adicionado quando o projeto visual for criado.
+Ainda não há um arquivo ou link Figma definido no repositório. Este documento funciona como briefing de interface e checklist de handoff. O primeiro protótipo funcional está em `frontend/`, servido pela própria API; o link oficial deve ser adicionado quando o projeto visual for criado.
 
 ## 2. Princípios de experiência
 

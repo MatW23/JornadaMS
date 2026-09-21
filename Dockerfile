@@ -8,6 +8,7 @@ WORKDIR /app
 COPY pyproject.toml README.md ./
 COPY src ./src
 COPY migrations ./migrations
+COPY frontend ./frontend
 COPY alembic.ini ./alembic.ini
 
 RUN pip install --no-cache-dir .

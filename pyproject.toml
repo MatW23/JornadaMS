@@ -28,6 +28,7 @@ dev = [
 
 [project.scripts]
 jornada-ms = "jornada_ms.main:run"
+jornada-ms-create-user = "jornada_ms.cli:create_user"
 
 [tool.setuptools.packages.find]
 where = ["src"]
