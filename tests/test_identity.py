@@ -108,6 +108,25 @@ async def test_invalid_credentials_are_safe(identity_client: httpx.AsyncClient) 
     assert "wrong secret" not in response.text
 
 
+@pytest.mark.anyio
+async def test_login_rate_limit_returns_retry_after(identity_client: httpx.AsyncClient) -> None:
+    for _ in range(5):
+        response = await identity_client.post(
+            "/api/v1/auth/login",
+            json={"email": "admin@example.com", "password": "wrong secret"},
+        )
+        assert response.status_code == 401
+
+    blocked = await identity_client.post(
+        "/api/v1/auth/login",
+        json={"email": "admin@example.com", "password": "wrong secret"},
+    )
+
+    assert blocked.status_code == 429
+    assert blocked.headers["retry-after"]
+    assert blocked.json()["error"]["code"] == "TOO_MANY_LOGIN_ATTEMPTS"
+
+
 def test_email_is_unique_case_insensitively(identity_context) -> None:
     _app, service = identity_context
 

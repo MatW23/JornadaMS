@@ -19,6 +19,7 @@ Implementado no servidor neste incremento: `POST /api/v1/auth/login`, `POST /api
 - `page_size` padrão é `50` e o limite máximo é `100`.
 - Escritas críticas aceitam `Idempotency-Key`; no registro de ponto, o header é obrigatório.
 - Respostas de erro possuem `code`, `message`, `details` e `correlation_id`.
+- O login aplica limitação configurável de tentativas e retorna `429` com `Retry-After` quando o limite é excedido.
 
 ## 3.1 Enums e schemas mínimos do MVP-1
 

@@ -264,3 +264,57 @@ async def update_employee(
     if row is None:
         raise AppError("EMPLOYEE_NOT_FOUND", "Employee not found", status_code=404)
     return _employee(row)
+
+
+async def _set_employee_status(
+    employee_id: UUID,
+    new_status: str,
+    database: Database,
+) -> Employee:
+    with database.engine.begin() as connection:
+        connection.execute(
+            text(
+                "UPDATE employees SET status = :status, updated_at = CURRENT_TIMESTAMP "
+                "WHERE id = :id"
+            ),
+            {"status": new_status, "id": str(employee_id)},
+        )
+        row = (
+            connection.execute(
+                text(f"SELECT {_COLUMNS} FROM employees WHERE id = :id"),
+                {"id": str(employee_id)},
+            )
+            .mappings()
+            .first()
+        )
+    if row is None:
+        raise AppError("EMPLOYEE_NOT_FOUND", "Employee not found", status_code=404)
+    return _employee(row)
+
+
+@router.post(
+    "/employees/{employee_id}/activate",
+    response_model=Employee,
+    operation_id="activateEmployee",
+)
+async def activate_employee(
+    employee_id: UUID,
+    database: Database = Depends(_db),
+    principal: Principal = Depends(require_roles("ADMIN", "HR")),
+) -> Employee:
+    del principal
+    return await _set_employee_status(employee_id, "ACTIVE", database)
+
+
+@router.post(
+    "/employees/{employee_id}/deactivate",
+    response_model=Employee,
+    operation_id="deactivateEmployee",
+)
+async def deactivate_employee(
+    employee_id: UUID,
+    database: Database = Depends(_db),
+    principal: Principal = Depends(require_roles("ADMIN", "HR")),
+) -> Employee:
+    del principal
+    return await _set_employee_status(employee_id, "INACTIVE", database)

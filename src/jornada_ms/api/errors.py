@@ -1,5 +1,6 @@
 """Consistent, safe error responses for the HTTP boundary."""
 
+import logging
 from typing import Any
 
 from fastapi import HTTPException, Request
@@ -7,6 +8,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from starlette import status
+
+logger = logging.getLogger(__name__)
 
 
 class ErrorBody(BaseModel):
@@ -34,12 +37,14 @@ class AppError(Exception):
         *,
         status_code: int = status.HTTP_400_BAD_REQUEST,
         details: list[Any] | None = None,
+        headers: dict[str, str] | None = None,
     ) -> None:
         super().__init__(message)
         self.code = code
         self.message = message
         self.status_code = status_code
         self.details = details or []
+        self.headers = headers or {}
 
 
 def _correlation_id(request: Request) -> str:
@@ -77,6 +82,7 @@ def register_exception_handlers(app) -> None:
         return JSONResponse(
             status_code=exc.status_code,
             content=_payload(request, exc.code, exc.message, exc.details),
+            headers=exc.headers,
         )
 
     @app.exception_handler(HTTPException)
@@ -111,7 +117,10 @@ def register_exception_handlers(app) -> None:
 
     @app.exception_handler(Exception)
     async def unexpected_error_handler(request: Request, exc: Exception) -> JSONResponse:
-        del exc
+        logger.exception(
+            "Unhandled application exception",
+            extra={"correlation_id": _correlation_id(request)},
+        )
         return JSONResponse(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             content=_payload(request, "INTERNAL_SERVER_ERROR", "Internal server error"),

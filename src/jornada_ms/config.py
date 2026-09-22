@@ -26,6 +26,8 @@ class Settings(BaseSettings):
     database_echo: bool = False
     access_token_expire_seconds: int = Field(default=900, ge=60, le=86_400)
     refresh_token_expire_seconds: int = Field(default=2_592_000, ge=3_600, le=31_536_000)
+    login_rate_limit_attempts: int = Field(default=5, ge=1, le=100)
+    login_rate_limit_window_seconds: int = Field(default=60, ge=10, le=3_600)
     jwt_secret: str = Field(
         default="development-only-change-this-jwt-secret-32-chars",
         min_length=32,

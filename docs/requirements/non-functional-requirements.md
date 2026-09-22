@@ -34,6 +34,7 @@ As metas abaixo são referências para validação e podem ser revisadas quando 
 5. Dados de auditoria não devem ser editáveis por usuários comuns.
 6. Dependências devem ser avaliadas e atualizadas por processo definido.
 7. O mecanismo de refresh deve usar token opaco rotativo e hash persistido em `sessions`.
+8. O login deve limitar tentativas por IP e identificador durante uma janela configurável; em produção distribuída, o limite deve ser aplicado no gateway ou em um armazenamento compartilhado.
 
 ## 3. Estratégia de medição
 

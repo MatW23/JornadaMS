@@ -54,6 +54,11 @@ def _correlation_id(request: Request) -> str:
     return getattr(request.state, "correlation_id", "unknown")
 
 
+def _login_rate_limit_keys(request: Request, email: str) -> list[str]:
+    client_ip = request.client.host if request.client else "unknown"
+    return [f"ip:{client_ip}", f"email:{email.strip().casefold()}"]
+
+
 def _extract_bearer(credentials: HTTPAuthorizationCredentials | None) -> str:
     if credentials is None or credentials.scheme.lower() != "bearer":
         raise AppError("UNAUTHORIZED", "Authentication is required", status_code=401)
@@ -88,19 +93,39 @@ def require_roles(*roles: str):
     "/auth/login",
     operation_id="login",
     response_model=LoginResponse,
-    responses={401: {"model": ErrorResponse}, 409: {"model": ErrorResponse}},
+    responses={
+        401: {"model": ErrorResponse},
+        409: {"model": ErrorResponse},
+        429: {"model": ErrorResponse},
+    },
 )
 async def login(
     payload: LoginRequest,
     request: Request,
     service: IdentityService = Depends(get_identity_service),
 ) -> LoginResponse:
-    tokens = service.login(
-        payload.email,
-        payload.password,
-        _correlation_id(request),
-        _client_ip(request),
-    )
+    limiter = request.app.state.login_rate_limiter
+    rate_limit_keys = _login_rate_limit_keys(request, payload.email)
+    retry_after = limiter.retry_after(rate_limit_keys)
+    if retry_after is not None:
+        raise AppError(
+            "TOO_MANY_LOGIN_ATTEMPTS",
+            "Too many login attempts. Try again later.",
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            headers={"Retry-After": str(retry_after)},
+        )
+    try:
+        tokens = service.login(
+            payload.email,
+            payload.password,
+            _correlation_id(request),
+            _client_ip(request),
+        )
+    except AppError as exc:
+        if exc.code == "INVALID_CREDENTIALS":
+            limiter.record_failure(rate_limit_keys)
+        raise
+    limiter.clear(rate_limit_keys)
     return LoginResponse(
         access_token=tokens.access_token,
         refresh_token=tokens.refresh_token,

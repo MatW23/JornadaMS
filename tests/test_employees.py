@@ -103,6 +103,20 @@ async def test_admin_can_create_and_update_employee(employee_client: httpx.Async
     assert updated.status_code == 200
     assert updated.json()["name"] == "Maria da Silva Santos"
 
+    deactivated = await employee_client.post(
+        f"/api/v1/employees/{employee.json()['id']}/deactivate",
+        headers=headers,
+    )
+    assert deactivated.status_code == 200
+    assert deactivated.json()["status"] == "INACTIVE"
+
+    activated = await employee_client.post(
+        f"/api/v1/employees/{employee.json()['id']}/activate",
+        headers=headers,
+    )
+    assert activated.status_code == 200
+    assert activated.json()["status"] == "ACTIVE"
+
 
 @pytest.mark.anyio
 async def test_attendance_enforces_entry_exit_sequence(employee_client: httpx.AsyncClient) -> None:
@@ -176,6 +190,19 @@ async def test_attendance_enforces_entry_exit_sequence(employee_client: httpx.As
     )
     assert retry.status_code == 200
 
+    reused_key = await employee_client.post(
+        "/api/v1/time-events",
+        headers=event_headers,
+        json={
+            "employee_id": employee_id,
+            "event_type": "ENTRADA",
+            "occurred_at": "2026-09-21T08:01:00-03:00",
+            "source": "WEB",
+        },
+    )
+    assert reused_key.status_code == 409
+    assert reused_key.json()["error"]["code"] == "IDEMPOTENCY_KEY_REUSED"
+
     repeated_entry = await employee_client.post(
         "/api/v1/time-events",
         headers={**headers, "Idempotency-Key": "attendance-entry-2"},
@@ -209,6 +236,18 @@ async def test_attendance_enforces_entry_exit_sequence(employee_client: httpx.As
     )
     assert history.status_code == 200
     assert history.json()["total_items"] == 2
+
+    missing_key = await employee_client.post(
+        "/api/v1/time-events",
+        headers=headers,
+        json={
+            "employee_id": employee_id,
+            "event_type": "ENTRADA",
+            "occurred_at": "2026-09-22T08:00:00-03:00",
+            "source": "WEB",
+        },
+    )
+    assert missing_key.status_code == 422
 
 
 @pytest.mark.anyio
@@ -268,3 +307,19 @@ async def test_admin_can_create_and_assign_work_schedule(
     )
     assert assignment.status_code == 201
     assert assignment.json()["employee_id"] == employee.json()["id"]
+
+    overlap = await employee_client.post(
+        f"/api/v1/employees/{employee.json()['id']}/schedules",
+        headers=headers,
+        json={"schedule_id": schedule.json()["id"], "starts_on": "2026-09-22"},
+    )
+    assert overlap.status_code == 409
+    assert overlap.json()["error"]["code"] == "SCHEDULE_OVERLAP"
+
+    updated = await employee_client.patch(
+        f"/api/v1/work-schedules/{schedule.json()['id']}",
+        headers=headers,
+        json={"start_time": "09:00:00", "end_time": "18:00:00"},
+    )
+    assert updated.status_code == 200
+    assert updated.json()["start_time"] == "09:00:00"

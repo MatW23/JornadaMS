@@ -14,6 +14,7 @@ from jornada_ms.db.session import Database
 from jornada_ms.modules.attendance.api import router as attendance_router
 from jornada_ms.modules.employees.api import router as employees_router
 from jornada_ms.modules.identity.api import router as identity_router
+from jornada_ms.modules.identity.rate_limit import LoginRateLimiter
 from jornada_ms.modules.organization.api import router as organization_router
 from jornada_ms.modules.schedules.api import router as schedules_router
 
@@ -40,6 +41,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     )
     app.state.settings = resolved_settings
     app.state.database = Database.from_settings(resolved_settings)
+    app.state.login_rate_limiter = LoginRateLimiter(
+        resolved_settings.login_rate_limit_attempts,
+        resolved_settings.login_rate_limit_window_seconds,
+    )
     app.add_middleware(
         CorrelationIdMiddleware,
         header_name=resolved_settings.correlation_header,

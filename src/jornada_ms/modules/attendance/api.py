@@ -8,7 +8,7 @@ from typing import Any
 from uuid import UUID, uuid4
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from fastapi import APIRouter, Depends, Header, Query, Response
+from fastapi import APIRouter, Depends, Header, Query, Request, Response
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
@@ -76,6 +76,10 @@ router = APIRouter(prefix="/api/v1", tags=["Attendance"])
 
 def _database(service: IdentityService = Depends(get_identity_service)) -> Database:
     return service.database
+
+
+def _correlation_id(request: Request) -> str:
+    return getattr(request.state, "correlation_id", "unknown")
 
 
 def _employee_id(payload_id: UUID | None, principal: Principal) -> str:
@@ -292,20 +296,27 @@ def _upsert_summary(
 )
 async def create_time_event(
     payload: TimeEventCreate,
+    request: Request,
     response: Response,
     principal: Principal = Depends(require_roles("ADMIN", "HR", "COLLABORATOR")),
     database: Database = Depends(_database),
-    idempotency_key: str | None = Header(default=None, alias="Idempotency-Key", max_length=128),
+    idempotency_key: str = Header(
+        ..., alias="Idempotency-Key", min_length=16, max_length=128
+    ),
 ) -> TimeEventResult | JSONResponse:
     employee_id = _employee_id(payload.employee_id, principal)
     occurred_at = _as_utc(payload.occurred_at)
     try:
         with database.engine.begin() as connection:
+            employee_query = (
+                "SELECT e.status, b.timezone FROM employees e "
+                "JOIN branches b ON b.id = e.branch_id WHERE e.id = :id"
+            )
+            if connection.dialect.name == "postgresql":
+                employee_query += " FOR UPDATE"
             employee = (
                 connection.execute(
-                    text(
-                        "SELECT e.status, b.timezone FROM employees e JOIN branches b ON b.id = e.branch_id WHERE e.id = :id"
-                    ),
+                    text(employee_query),
                     {"id": employee_id},
                 )
                 .mappings()
@@ -315,42 +326,52 @@ async def create_time_event(
                 raise AppError("EMPLOYEE_NOT_FOUND", "Active employee not found", status_code=404)
             timezone = employee["timezone"]
             local_date = occurred_at.astimezone(_timezone(timezone)).date()
-            if idempotency_key:
-                existing = (
+            existing = (
+                connection.execute(
+                    text(
+                        "SELECT id, employee_id, work_date, event_type, occurred_at, timezone, source FROM time_events WHERE employee_id = :employee_id AND idempotency_key = :idempotency_key"
+                    ),
+                    {"employee_id": employee_id, "idempotency_key": idempotency_key},
+                )
+                .mappings()
+                .first()
+            )
+            if existing is not None:
+                existing_at = _as_utc(_parse_datetime(existing["occurred_at"]))
+                if (
+                    existing["event_type"] != payload.event_type
+                    or existing_at != occurred_at
+                    or existing["source"] != payload.source
+                ):
+                    raise AppError(
+                        "IDEMPOTENCY_KEY_REUSED",
+                        "The idempotency key was already used with another payload",
+                        status_code=409,
+                    )
+                events = (
                     connection.execute(
                         text(
-                            "SELECT id, employee_id, work_date, event_type, occurred_at, timezone, source FROM time_events WHERE employee_id = :employee_id AND idempotency_key = :idempotency_key"
+                            "SELECT event_type, occurred_at FROM time_events WHERE employee_id = :employee_id AND work_date = :work_date ORDER BY occurred_at"
                         ),
-                        {"employee_id": employee_id, "idempotency_key": idempotency_key},
+                        {"employee_id": employee_id, "work_date": existing["work_date"]},
                     )
                     .mappings()
-                    .first()
+                    .all()
                 )
-                if existing is not None:
-                    events = (
-                        connection.execute(
-                            text(
-                                "SELECT event_type, occurred_at FROM time_events WHERE employee_id = :employee_id AND work_date = :work_date ORDER BY occurred_at"
-                            ),
-                            {"employee_id": employee_id, "work_date": existing["work_date"]},
-                        )
-                        .mappings()
-                        .all()
-                    )
-                    summary = _upsert_summary(
-                        connection,
-                        employee_id,
-                        existing["work_date"],
-                        _calculate_worked_minutes(events),
-                        events[-1]["event_type"] == "ENTRADA",
-                        timezone,
-                    )
-                    return JSONResponse(
-                        status_code=200,
-                        content=jsonable_encoder(
-                            TimeEventResult(event=_event_from_row(existing), daily_summary=summary)
-                        ),
-                    )
+                summary = _upsert_summary(
+                    connection,
+                    employee_id,
+                    existing["work_date"],
+                    _calculate_worked_minutes(events),
+                    events[-1]["event_type"] == "ENTRADA",
+                    timezone,
+                )
+                return JSONResponse(
+                    status_code=200,
+                    content=jsonable_encoder(
+                        TimeEventResult(event=_event_from_row(existing), daily_summary=summary)
+                    ),
+                )
             previous = connection.execute(
                 text(
                     "SELECT event_type FROM time_events WHERE employee_id = :employee_id AND work_date = :work_date ORDER BY occurred_at DESC LIMIT 1"
@@ -376,7 +397,7 @@ async def create_time_event(
                     "timezone": timezone,
                     "source": payload.source,
                     "created_by": principal.user_id,
-                    "correlation_id": "attendance",
+                    "correlation_id": _correlation_id(request),
                     "idempotency_key": idempotency_key,
                 },
             )
@@ -475,6 +496,10 @@ async def list_daily_summaries(
     database: Database = Depends(_database),
 ) -> DailySummaryPage:
     target = _employee_id(employee_id, principal)
+    if to_date < from_date:
+        raise AppError(
+            "INVALID_DATE_RANGE", "The end date must be after the start date", status_code=422
+        )
     params = {
         "employee_id": target,
         "from_date": from_date,

@@ -24,7 +24,7 @@ jobs:
         run: ruff check .
 
       - name: Tests
-        run: pytest
+        run: pytest --cov=src/jornada_ms --cov-report=term-missing --cov-fail-under=80
 
       - name: Validate Alembic migrations
         env:

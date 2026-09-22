@@ -228,15 +228,18 @@ async def update_work_schedule(
             for key, value in fields.items()
             if key in {"name", "same_day_only", "tolerance_minutes"}
         }
-        if schedule_fields:
+        if schedule_fields or "start_time" in fields or "end_time" in fields:
+            if "start_time" not in schedule_fields and "end_time" not in schedule_fields:
+                schedule_fields = {}
             assignments = ", ".join(f"{key} = :{key}" for key in schedule_fields)
-            schedule_fields["id"] = str(schedule_id)
-            connection.execute(
-                text(
-                    f"UPDATE work_schedules SET {assignments}, updated_at = CURRENT_TIMESTAMP WHERE id = :id"
-                ),
-                schedule_fields,
-            )
+            if assignments:
+                schedule_fields["id"] = str(schedule_id)
+                connection.execute(
+                    text(
+                        f"UPDATE work_schedules SET {assignments}, updated_at = CURRENT_TIMESTAMP WHERE id = :id"
+                    ),
+                    schedule_fields,
+                )
             connection.execute(
                 text(
                     "UPDATE schedule_days SET start_time = :start_time, end_time = :end_time WHERE schedule_id = :id"
@@ -277,8 +280,11 @@ async def assign_employee_schedule(
         )
     try:
         with database.engine.begin() as connection:
+            employee_query = "SELECT id FROM employees WHERE id = :id AND status = 'ACTIVE'"
+            if connection.dialect.name == "postgresql":
+                employee_query += " FOR UPDATE"
             employee = connection.execute(
-                text("SELECT id FROM employees WHERE id = :id AND status = 'ACTIVE'"),
+                text(employee_query),
                 {"id": str(employee_id)},
             ).first()
             schedule = connection.execute(
@@ -290,6 +296,25 @@ async def assign_employee_schedule(
             if schedule is None:
                 raise AppError(
                     "SCHEDULE_NOT_FOUND", "Active work schedule not found", status_code=404
+                )
+            overlap = connection.execute(
+                text(
+                    "SELECT 1 FROM employee_schedules "
+                    "WHERE employee_id = :employee_id "
+                    "AND starts_on <= :effective_end "
+                    "AND (ends_on IS NULL OR ends_on >= :starts_on) LIMIT 1"
+                ),
+                {
+                    "employee_id": str(employee_id),
+                    "starts_on": payload.starts_on,
+                    "effective_end": payload.ends_on or date(9999, 12, 31),
+                },
+            ).first()
+            if overlap is not None:
+                raise AppError(
+                    "SCHEDULE_OVERLAP",
+                    "The employee already has a schedule in this period",
+                    status_code=409,
                 )
             connection.execute(
                 text(

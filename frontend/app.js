@@ -112,7 +112,7 @@ async function loadEmployees() {
       apiRequest("/api/v1/employees"),
       apiRequest("/api/v1/branches"),
     ]);
-    $("#employee-branch").innerHTML = branches.items.map((branch) => `<option value="${branch.id}">${branch.name} · ${branch.code}</option>`).join("");
+    $("#employee-branch").innerHTML = branches.items.map((branch) => `<option value="${escapeHtml(branch.id)}">${escapeHtml(branch.name)} · ${escapeHtml(branch.code)}</option>`).join("");
     table.innerHTML = employees.items.length
       ? employees.items.map((employee) => `<tr><td><strong>${escapeHtml(employee.name)}</strong></td><td>${escapeHtml(employee.registration_code)}</td><td>${escapeHtml(branches.items.find((branch) => branch.id === employee.branch_id)?.name || "—")}</td><td><span class="status-tag">${employee.status === "ACTIVE" ? "Ativo" : "Inativo"}</span></td></tr>`).join("")
       : '<tr><td colspan="4" class="table-empty">Nenhum colaborador cadastrado.</td></tr>';

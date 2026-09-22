@@ -82,6 +82,8 @@ Os comandos `jornada-ms-create-user` e `jornada-ms-create-organization` criam, r
 
 A aplicação fica disponível em `http://localhost:8000`; a tela web inicial fica em `/` e a documentação interativa do FastAPI fica em `/docs`. Os health checks são `GET /health/live` e `GET /health/ready`.
 
+Para validar o ambiente com PostgreSQL em containers, execute `docker compose up -d --build`, aplique `docker compose exec api alembic upgrade head` e então crie o usuário inicial com `docker compose exec api jornada-ms-create-user --email admin@empresa.com`.
+
 Estado da implementação: o servidor registra os health checks, identidade, empresas, filiais, colaboradores, jornadas simples, registro de entrada/saída e uma tela web com login, painel, equipe, jornadas e histórico do dia. Intervalos, regras avançadas e relatórios ainda estão em desenvolvimento.
 
 ## Convenções de documentação

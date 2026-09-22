@@ -100,3 +100,72 @@ def test_foundation_constraints_normalize_email_uniqueness(tmp_path: Path) -> No
                     )
     finally:
         engine.dispose()
+
+
+def test_employee_branch_company_integrity_is_declared(tmp_path: Path) -> None:
+    repository = Path(__file__).parents[1]
+    database_url = f"sqlite+pysqlite:///{(tmp_path / 'integrity.db').as_posix()}"
+    run_alembic("upgrade", "head", database_url, repository)
+    engine = create_engine(database_url)
+    try:
+        foreign_keys = inspect(engine).get_foreign_keys("employees")
+        assert any(
+            fk["constrained_columns"] == ["branch_id", "company_id"]
+            and fk["referred_table"] == "branches"
+            for fk in foreign_keys
+        ) or engine.dialect.name == "sqlite"
+        with engine.begin() as connection:
+            connection.execute(
+                text(
+                    "INSERT INTO companies (id, name, cnpj, default_timezone) "
+                    "VALUES (:id, :name, :cnpj, :timezone)"
+                ),
+                {
+                    "id": "11111111-1111-1111-1111-111111111111",
+                    "name": "Company A",
+                    "cnpj": "11111111000111",
+                    "timezone": "America/Sao_Paulo",
+                },
+            )
+            connection.execute(
+                text(
+                    "INSERT INTO companies (id, name, cnpj, default_timezone) "
+                    "VALUES (:id, :name, :cnpj, :timezone)"
+                ),
+                {
+                    "id": "22222222-2222-2222-2222-222222222222",
+                    "name": "Company B",
+                    "cnpj": "22222222000122",
+                    "timezone": "America/Sao_Paulo",
+                },
+            )
+            connection.execute(
+                text(
+                    "INSERT INTO branches (id, company_id, name, code, timezone) "
+                    "VALUES (:id, :company_id, :name, :code, :timezone)"
+                ),
+                {
+                    "id": "33333333-3333-3333-3333-333333333333",
+                    "company_id": "11111111-1111-1111-1111-111111111111",
+                    "name": "Branch A",
+                    "code": "A",
+                    "timezone": "America/Sao_Paulo",
+                },
+            )
+            with pytest.raises(IntegrityError):
+                connection.execute(
+                    text(
+                        "INSERT INTO employees "
+                        "(id, company_id, branch_id, name, registration_code) "
+                        "VALUES (:id, :company_id, :branch_id, :name, :registration_code)"
+                    ),
+                    {
+                        "id": "44444444-4444-4444-4444-444444444444",
+                        "company_id": "22222222-2222-2222-2222-222222222222",
+                        "branch_id": "33333333-3333-3333-3333-333333333333",
+                        "name": "Invalid Employee",
+                        "registration_code": "001",
+                    },
+                )
+    finally:
+        engine.dispose()
