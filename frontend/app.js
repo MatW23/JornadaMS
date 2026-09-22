@@ -1,24 +1,11 @@
 const state = {
-  accessToken: window.localStorage.getItem("jornada.accessToken"),
-  refreshToken: window.localStorage.getItem("jornada.refreshToken"),
   user: null,
 };
 
 const $ = (selector) => document.querySelector(selector);
 
-function saveTokens(tokens) {
-  state.accessToken = tokens.access_token;
-  state.refreshToken = tokens.refresh_token;
-  window.localStorage.setItem("jornada.accessToken", state.accessToken);
-  window.localStorage.setItem("jornada.refreshToken", state.refreshToken);
-}
-
 function clearSession() {
-  state.accessToken = null;
-  state.refreshToken = null;
   state.user = null;
-  window.localStorage.removeItem("jornada.accessToken");
-  window.localStorage.removeItem("jornada.refreshToken");
 }
 
 function showToast(message) {
@@ -41,26 +28,23 @@ function showApp() {
 }
 
 async function refreshSession() {
-  if (!state.refreshToken) return false;
   const response = await fetch("/api/v1/auth/refresh", {
-    body: JSON.stringify({ refresh_token: state.refreshToken }),
+    body: JSON.stringify({}),
     headers: { "Content-Type": "application/json" },
     method: "POST",
+    credentials: "same-origin",
   });
   if (!response.ok) return false;
-  saveTokens(await response.json());
   return true;
 }
 
 async function apiRequest(path, options = {}, retry = true) {
   const headers = new Headers(options.headers || {});
   headers.set("Content-Type", "application/json");
-  if (state.accessToken) headers.set("Authorization", `Bearer ${state.accessToken}`);
-  let response = await fetch(path, { ...options, headers });
+  let response = await fetch(path, { ...options, headers, credentials: "same-origin" });
   if (response.status === 401 && retry && path !== "/api/v1/auth/refresh") {
     if (await refreshSession()) {
-      headers.set("Authorization", `Bearer ${state.accessToken}`);
-      response = await fetch(path, { ...options, headers });
+      response = await fetch(path, { ...options, headers, credentials: "same-origin" });
     }
   }
   if (!response.ok) {
@@ -299,10 +283,10 @@ async function handleLogin(event) {
       body: JSON.stringify({ email: $("#email").value, password: $("#password").value }),
       headers: { "Content-Type": "application/json" },
       method: "POST",
+      credentials: "same-origin",
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.error?.message || "Email ou senha inválidos.");
-    saveTokens(data);
     $("#password").value = "";
     await loadUser();
     showToast("Login realizado com sucesso.");
@@ -337,8 +321,4 @@ $("#schedule-form").addEventListener("submit", handleScheduleSubmit);
 $("#assign-schedule-button").addEventListener("click", assignSchedule);
 renderDate();
 
-if (state.accessToken) {
-  loadUser().catch(() => { clearSession(); showLogin(); });
-} else {
-  showLogin();
-}
+loadUser().catch(() => { clearSession(); showLogin(); });

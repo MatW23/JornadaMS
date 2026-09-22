@@ -4,23 +4,34 @@
 # ruff: noqa: E501
 
 from uuid import uuid4
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from fastapi import APIRouter, Depends, Query
-from pydantic import BaseModel, Field
+from fastapi import APIRouter, Depends, Query, Request
+from pydantic import BaseModel, Field, field_validator
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
 from starlette import status
 
 from jornada_ms.api.errors import AppError, ErrorResponse
 from jornada_ms.db.session import Database
+from jornada_ms.modules.audit.service import record_audit
 from jornada_ms.modules.identity.api import get_identity_service, require_roles
 from jornada_ms.modules.identity.service import IdentityService, Principal
 
 
 class CompanyCreate(BaseModel):
     name: str = Field(min_length=1, max_length=160)
-    cnpj: str = Field(min_length=14, max_length=14)
+    cnpj: str = Field(pattern=r"^\d{14}$")
     default_timezone: str = Field(min_length=1, max_length=64)
+
+    @field_validator("default_timezone")
+    @classmethod
+    def validate_timezone(cls, value: str) -> str:
+        try:
+            ZoneInfo(value)
+        except ZoneInfoNotFoundError as exc:
+            raise ValueError("Timezone must be a valid IANA timezone") from exc
+        return value
 
 
 class Company(BaseModel):
@@ -36,6 +47,15 @@ class BranchCreate(BaseModel):
     name: str = Field(min_length=1, max_length=160)
     code: str = Field(min_length=1, max_length=40)
     timezone: str = Field(min_length=1, max_length=64)
+
+    @field_validator("timezone")
+    @classmethod
+    def validate_timezone(cls, value: str) -> str:
+        try:
+            ZoneInfo(value)
+        except ZoneInfoNotFoundError as exc:
+            raise ValueError("Timezone must be a valid IANA timezone") from exc
+        return value
 
 
 class Branch(BaseModel):
@@ -60,6 +80,14 @@ router = APIRouter(prefix="/api/v1", tags=["Organization"])
 
 def _service_database(service: IdentityService = Depends(get_identity_service)) -> Database:
     return service.database
+
+
+def _correlation_id(request: Request) -> str:
+    return getattr(request.state, "correlation_id", "unknown")
+
+
+def _client_ip(request: Request) -> str | None:
+    return request.client.host if request.client else None
 
 
 @router.get("/companies", response_model=Page, operation_id="listCompanies")
@@ -100,10 +128,10 @@ async def list_companies(
 )
 async def create_company(
     payload: CompanyCreate,
+    request: Request,
     database: Database = Depends(_service_database),
     principal: Principal = Depends(require_roles("ADMIN")),
 ) -> Company:
-    del principal
     company_id = str(uuid4())
     try:
         with database.engine.begin() as connection:
@@ -116,6 +144,21 @@ async def create_company(
                     "name": payload.name.strip(),
                     "cnpj": payload.cnpj,
                     "timezone": payload.default_timezone,
+                },
+            )
+            record_audit(
+                connection,
+                actor_id=principal.user_id,
+                action="COMPANY_CREATED",
+                entity_type="COMPANY",
+                entity_id=company_id,
+                result="SUCCESS",
+                correlation_id=_correlation_id(request),
+                ip_address=_client_ip(request),
+                after_data={
+                    "name": payload.name.strip(),
+                    "cnpj": payload.cnpj,
+                    "default_timezone": payload.default_timezone,
                 },
             )
     except IntegrityError as exc:
@@ -174,10 +217,10 @@ async def list_branches(
 )
 async def create_branch(
     payload: BranchCreate,
+    request: Request,
     database: Database = Depends(_service_database),
     principal: Principal = Depends(require_roles("ADMIN")),
 ) -> Branch:
-    del principal
     branch_id = str(uuid4())
     try:
         with database.engine.begin() as connection:
@@ -192,6 +235,22 @@ async def create_branch(
                 ),
                 {
                     "id": branch_id,
+                    "company_id": payload.company_id,
+                    "name": payload.name.strip(),
+                    "code": payload.code.strip(),
+                    "timezone": payload.timezone,
+                },
+            )
+            record_audit(
+                connection,
+                actor_id=principal.user_id,
+                action="BRANCH_CREATED",
+                entity_type="BRANCH",
+                entity_id=branch_id,
+                result="SUCCESS",
+                correlation_id=_correlation_id(request),
+                ip_address=_client_ip(request),
+                after_data={
                     "company_id": payload.company_id,
                     "name": payload.name.strip(),
                     "code": payload.code.strip(),

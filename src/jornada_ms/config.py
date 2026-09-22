@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     refresh_token_expire_seconds: int = Field(default=2_592_000, ge=3_600, le=31_536_000)
     login_rate_limit_attempts: int = Field(default=5, ge=1, le=100)
     login_rate_limit_window_seconds: int = Field(default=60, ge=10, le=3_600)
+    access_cookie_name: str = "jornada_access"
+    refresh_cookie_name: str = "jornada_refresh"
+    auth_cookie_secure: bool = False
     jwt_secret: str = Field(
         default="development-only-change-this-jwt-secret-32-chars",
         min_length=32,

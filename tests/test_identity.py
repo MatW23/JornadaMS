@@ -60,6 +60,13 @@ async def test_login_me_refresh_rotation_and_logout(identity_client: httpx.Async
     first_tokens = login.json()
     assert first_tokens["token_type"] == "Bearer"
     assert "correct horse" not in login.text
+    assert "jornada_access=" in login.headers["set-cookie"]
+    assert "HttpOnly" in login.headers["set-cookie"]
+    assert "SameSite=lax" in login.headers["set-cookie"]
+
+    cookie_me = await identity_client.get("/api/v1/me")
+    assert cookie_me.status_code == 200
+    assert cookie_me.json()["email"] == "admin@example.com"
 
     me = await identity_client.get(
         "/api/v1/me",
@@ -71,7 +78,7 @@ async def test_login_me_refresh_rotation_and_logout(identity_client: httpx.Async
 
     rotated = await identity_client.post(
         "/api/v1/auth/refresh",
-        json={"refresh_token": first_tokens["refresh_token"]},
+        json={},
     )
     assert rotated.status_code == 200
     second_tokens = rotated.json()
@@ -88,6 +95,7 @@ async def test_login_me_refresh_rotation_and_logout(identity_client: httpx.Async
         headers={"Authorization": f"Bearer {second_tokens['access_token']}"},
     )
     assert logged_out.status_code == 204
+    assert "Max-Age=0" in logged_out.headers["set-cookie"]
 
     after_logout = await identity_client.get(
         "/api/v1/me",

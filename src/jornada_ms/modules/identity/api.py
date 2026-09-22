@@ -21,7 +21,7 @@ class LoginRequest(BaseModel):
 
 
 class RefreshRequest(BaseModel):
-    refresh_token: str = Field(min_length=16, max_length=512)
+    refresh_token: str | None = Field(default=None, min_length=16, max_length=512)
 
 
 class LoginResponse(BaseModel):
@@ -59,23 +59,68 @@ def _login_rate_limit_keys(request: Request, email: str) -> list[str]:
     return [f"ip:{client_ip}", f"email:{email.strip().casefold()}"]
 
 
-def _extract_bearer(credentials: HTTPAuthorizationCredentials | None) -> str:
-    if credentials is None or credentials.scheme.lower() != "bearer":
-        raise AppError("UNAUTHORIZED", "Authentication is required", status_code=401)
-    token = credentials.credentials.strip()
-    if not token:
-        raise AppError("UNAUTHORIZED", "Authentication is required", status_code=401)
-    return token
+def _extract_access_token(
+    request: Request, credentials: HTTPAuthorizationCredentials | None
+) -> str:
+    if credentials is not None and credentials.scheme.lower() == "bearer":
+        token = credentials.credentials.strip()
+        if token:
+            return token
+    token = request.cookies.get(request.app.state.settings.access_cookie_name, "").strip()
+    if token:
+        return token
+    raise AppError("UNAUTHORIZED", "Authentication is required", status_code=401)
+
+
+def _cookie_secure(request: Request) -> bool:
+    settings = request.app.state.settings
+    return settings.auth_cookie_secure or settings.environment.lower() in {"production", "prod"}
+
+
+def _set_auth_cookies(
+    response: Response, request: Request, access_token: str, refresh_token: str
+) -> None:
+    secure = _cookie_secure(request)
+    response.set_cookie(
+        key=request.app.state.settings.access_cookie_name,
+        value=access_token,
+        max_age=request.app.state.settings.access_token_expire_seconds,
+        httponly=True,
+        secure=secure,
+        samesite="lax",
+        path="/",
+    )
+    response.set_cookie(
+        key=request.app.state.settings.refresh_cookie_name,
+        value=refresh_token,
+        max_age=request.app.state.settings.refresh_token_expire_seconds,
+        httponly=True,
+        secure=secure,
+        samesite="lax",
+        path="/api/v1/auth",
+    )
+
+
+def _clear_auth_cookies(response: Response, request: Request) -> None:
+    response.delete_cookie(
+        key=request.app.state.settings.access_cookie_name,
+        path="/",
+    )
+    response.delete_cookie(
+        key=request.app.state.settings.refresh_cookie_name,
+        path="/api/v1/auth",
+    )
 
 
 async def get_current_principal(
+    request: Request,
     credentials: Annotated[
         HTTPAuthorizationCredentials | None,
         Security(_bearer_scheme),
     ] = None,
     service: IdentityService = Depends(get_identity_service),
 ) -> Principal:
-    return service.current_principal(_extract_bearer(credentials))
+    return service.current_principal(_extract_access_token(request, credentials))
 
 
 def require_roles(*roles: str):
@@ -102,6 +147,7 @@ def require_roles(*roles: str):
 async def login(
     payload: LoginRequest,
     request: Request,
+    response: Response,
     service: IdentityService = Depends(get_identity_service),
 ) -> LoginResponse:
     limiter = request.app.state.login_rate_limiter
@@ -126,6 +172,7 @@ async def login(
             limiter.record_failure(rate_limit_keys)
         raise
     limiter.clear(rate_limit_keys)
+    _set_auth_cookies(response, request, tokens.access_token, tokens.refresh_token)
     return LoginResponse(
         access_token=tokens.access_token,
         refresh_token=tokens.refresh_token,
@@ -142,13 +189,20 @@ async def login(
 async def refresh(
     payload: RefreshRequest,
     request: Request,
+    response: Response,
     service: IdentityService = Depends(get_identity_service),
 ) -> LoginResponse:
+    refresh_token = payload.refresh_token or request.cookies.get(
+        request.app.state.settings.refresh_cookie_name
+    )
+    if not refresh_token:
+        raise AppError("INVALID_REFRESH_TOKEN", "Refresh token is invalid", status_code=401)
     tokens = service.refresh(
-        payload.refresh_token,
+        refresh_token,
         _correlation_id(request),
         _client_ip(request),
     )
+    _set_auth_cookies(response, request, tokens.access_token, tokens.refresh_token)
     return LoginResponse(
         access_token=tokens.access_token,
         refresh_token=tokens.refresh_token,
@@ -168,7 +222,9 @@ async def logout(
     service: IdentityService = Depends(get_identity_service),
 ) -> Response:
     service.logout(principal, _correlation_id(request), _client_ip(request))
-    return Response(status_code=status.HTTP_204_NO_CONTENT)
+    response = Response(status_code=status.HTTP_204_NO_CONTENT)
+    _clear_auth_cookies(response, request)
+    return response
 
 
 @router.get(

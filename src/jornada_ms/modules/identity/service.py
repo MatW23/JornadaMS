@@ -16,6 +16,7 @@ from starlette import status
 from jornada_ms.api.errors import AppError
 from jornada_ms.config import Settings
 from jornada_ms.db.session import Database
+from jornada_ms.modules.audit.service import record_audit
 from jornada_ms.modules.identity.security import (
     TokenError,
     create_access_token,
@@ -409,24 +410,15 @@ class IdentityService:
         correlation_id: str,
         ip_address: str | None,
     ) -> None:
-        connection.execute(
-            text(
-                "INSERT INTO audit_events "
-                "(id, actor_id, action, entity_type, entity_id, result, "
-                "correlation_id, ip_address) "
-                "VALUES (:id, :actor_id, :action, :entity_type, :entity_id, :result, "
-                ":correlation_id, :ip_address)"
-            ),
-            {
-                "id": str(uuid4()),
-                "actor_id": actor_id,
-                "action": action,
-                "entity_type": "USER",
-                "entity_id": entity_id,
-                "result": result,
-                "correlation_id": correlation_id,
-                "ip_address": ip_address,
-            },
+        record_audit(
+            connection,
+            actor_id=actor_id,
+            action=action,
+            entity_type="USER",
+            entity_id=entity_id,
+            result=result,
+            correlation_id=correlation_id,
+            ip_address=ip_address,
         )
 
     @staticmethod

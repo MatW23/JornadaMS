@@ -16,3 +16,4 @@ async def test_client_assets_are_available(client):
 
     assert response.status_code == 200
     assert "auth/login" in response.text
+    assert "localStorage" not in response.text

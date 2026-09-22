@@ -13,7 +13,7 @@ Implementado no servidor neste incremento: `POST /api/v1/auth/login`, `POST /api
 - Base URL: `/api/v1`.
 - Health checks operacionais ficam fora da versão da API: `/health/live` e `/health/ready`.
 - JSON UTF-8 em requisições e respostas.
-- Autenticação: `Authorization: Bearer <jwt>`.
+- Autenticação web: cookies `HttpOnly`, `SameSite=Lax` (`jornada_access` e `jornada_refresh`); integrações podem usar `Authorization: Bearer <jwt>`.
 - Datas: ISO 8601; persistência em UTC e apresentação no fuso da organização.
 - Recursos pagináveis usam `page`, `page_size`, `sort` e filtros explícitos.
 - `page_size` padrão é `50` e o limite máximo é `100`.
@@ -73,7 +73,9 @@ ScheduleStatus = ACTIVE | INACTIVE
 | `POST` | `/auth/logout` | Autenticado | Revoga a sessão atual (MVP-1) |
 | `GET` | `/me` | Autenticado | Retorna usuário, papel e escopo (MVP-1) |
 
-O access token é um JWT curto. O refresh token é opaco, rotativo e persistido somente como hash em `sessions`. Logout revoga a sessão; refresh inválido, expirado ou revogado retorna `401`.
+O access token é um JWT curto. O refresh token é opaco, rotativo e persistido somente como hash em `sessions`. No navegador, ambos são enviados em cookies `HttpOnly`; em produção os cookies também usam `Secure`. Logout revoga a sessão e remove os cookies; refresh inválido, expirado ou revogado retorna `401`.
+
+O corpo de login ainda retorna os tokens para compatibilidade com clientes não-browser. O cliente web oficial não os persiste nem os lê: usa exclusivamente os cookies. Requisições de alteração dependem de `SameSite=Lax` e de origem same-origin; uma futura exposição cross-origin deverá adicionar proteção CSRF explícita.
 
 Exemplo de login:
 

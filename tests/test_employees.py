@@ -7,6 +7,7 @@ from pathlib import Path
 
 import httpx
 import pytest
+from sqlalchemy import text
 
 from jornada_ms.config import Settings
 from jornada_ms.main import create_app
@@ -48,7 +49,9 @@ async def employee_client(employee_context):
 
 
 @pytest.mark.anyio
-async def test_admin_can_create_and_update_employee(employee_client: httpx.AsyncClient) -> None:
+async def test_admin_can_create_and_update_employee(
+    employee_client: httpx.AsyncClient, employee_context
+) -> None:
     login = await employee_client.post(
         "/api/v1/auth/login",
         json={"email": "admin@example.com", "password": "correct horse battery staple"},
@@ -116,6 +119,17 @@ async def test_admin_can_create_and_update_employee(employee_client: httpx.Async
     )
     assert activated.status_code == 200
     assert activated.json()["status"] == "ACTIVE"
+
+    with employee_context.state.database.engine.connect() as connection:
+        actions = connection.execute(
+            text("SELECT action FROM audit_events ORDER BY occurred_at, id")
+        ).scalars().all()
+    assert "COMPANY_CREATED" in actions
+    assert "BRANCH_CREATED" in actions
+    assert "EMPLOYEE_CREATED" in actions
+    assert "EMPLOYEE_UPDATED" in actions
+    assert "EMPLOYEE_DEACTIVATED" in actions
+    assert "EMPLOYEE_ACTIVATED" in actions
 
 
 @pytest.mark.anyio
@@ -237,6 +251,18 @@ async def test_attendance_enforces_entry_exit_sequence(employee_client: httpx.As
     assert history.status_code == 200
     assert history.json()["total_items"] == 2
 
+    chronological_conflict = await employee_client.post(
+        "/api/v1/time-events",
+        headers={**headers, "Idempotency-Key": "attendance-out-of-order"},
+        json={
+            "employee_id": employee_id,
+            "event_type": "ENTRADA",
+            "occurred_at": "2026-09-21T16:00:00-03:00",
+            "source": "WEB",
+        },
+    )
+    assert chronological_conflict.status_code == 409
+    assert chronological_conflict.json()["error"]["code"] == "EVENT_TIME_NOT_AFTER_LAST"
     missing_key = await employee_client.post(
         "/api/v1/time-events",
         headers=headers,

@@ -5,7 +5,7 @@
 
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel, Field
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
@@ -13,6 +13,7 @@ from starlette import status
 
 from jornada_ms.api.errors import AppError, ErrorResponse
 from jornada_ms.db.session import Database
+from jornada_ms.modules.audit.service import record_audit
 from jornada_ms.modules.identity.api import get_identity_service, require_roles
 from jornada_ms.modules.identity.service import IdentityService, Principal
 
@@ -64,6 +65,14 @@ router = APIRouter(prefix="/api/v1", tags=["Employees"])
 
 def _db(service: IdentityService = Depends(get_identity_service)) -> Database:
     return service.database
+
+
+def _correlation_id(request: Request) -> str:
+    return getattr(request.state, "correlation_id", "unknown")
+
+
+def _client_ip(request: Request) -> str | None:
+    return request.client.host if request.client else None
 
 
 def _employee(row) -> Employee:
@@ -131,10 +140,10 @@ async def list_employees(
 )
 async def create_employee(
     payload: EmployeeCreate,
+    request: Request,
     database: Database = Depends(_db),
     principal: Principal = Depends(require_roles("ADMIN", "HR")),
 ) -> Employee:
-    del principal
     employee_id = str(uuid4())
     try:
         with database.engine.begin() as connection:
@@ -167,6 +176,17 @@ async def create_employee(
                 )
                 .mappings()
                 .one()
+            )
+            record_audit(
+                connection,
+                actor_id=principal.user_id,
+                action="EMPLOYEE_CREATED",
+                entity_type="EMPLOYEE",
+                entity_id=employee_id,
+                result="SUCCESS",
+                correlation_id=_correlation_id(request),
+                ip_address=_client_ip(request),
+                after_data={key: value for key, value in values.items() if key != "id"},
             )
     except IntegrityError as exc:
         raise AppError(
@@ -206,10 +226,10 @@ async def get_employee(
 async def update_employee(
     employee_id: UUID,
     payload: EmployeeUpdate,
+    request: Request,
     database: Database = Depends(_db),
     principal: Principal = Depends(require_roles("ADMIN", "HR")),
 ) -> Employee:
-    del principal
     fields = payload.model_dump(exclude_unset=True)
     if "name" in fields:
         fields["name"] = fields["name"].strip()
@@ -255,6 +275,18 @@ async def update_employee(
                 .mappings()
                 .first()
             )
+            if row is not None:
+                record_audit(
+                    connection,
+                    actor_id=principal.user_id,
+                    action="EMPLOYEE_UPDATED",
+                    entity_type="EMPLOYEE",
+                    entity_id=str(employee_id),
+                    result="SUCCESS",
+                    correlation_id=_correlation_id(request),
+                    ip_address=_client_ip(request),
+                    after_data=dict(row),
+                )
     except IntegrityError as exc:
         raise AppError(
             "EMPLOYEE_ALREADY_EXISTS",
@@ -270,6 +302,8 @@ async def _set_employee_status(
     employee_id: UUID,
     new_status: str,
     database: Database,
+    principal: Principal,
+    request: Request,
 ) -> Employee:
     with database.engine.begin() as connection:
         connection.execute(
@@ -287,8 +321,19 @@ async def _set_employee_status(
             .mappings()
             .first()
         )
-    if row is None:
-        raise AppError("EMPLOYEE_NOT_FOUND", "Employee not found", status_code=404)
+        if row is None:
+            raise AppError("EMPLOYEE_NOT_FOUND", "Employee not found", status_code=404)
+        record_audit(
+            connection,
+            actor_id=principal.user_id,
+            action="EMPLOYEE_ACTIVATED" if new_status == "ACTIVE" else "EMPLOYEE_DEACTIVATED",
+            entity_type="EMPLOYEE",
+            entity_id=str(employee_id),
+            result="SUCCESS",
+            correlation_id=_correlation_id(request),
+            ip_address=_client_ip(request),
+            after_data=dict(row),
+        )
     return _employee(row)
 
 
@@ -299,11 +344,11 @@ async def _set_employee_status(
 )
 async def activate_employee(
     employee_id: UUID,
+    request: Request,
     database: Database = Depends(_db),
     principal: Principal = Depends(require_roles("ADMIN", "HR")),
 ) -> Employee:
-    del principal
-    return await _set_employee_status(employee_id, "ACTIVE", database)
+    return await _set_employee_status(employee_id, "ACTIVE", database, principal, request)
 
 
 @router.post(
@@ -313,8 +358,8 @@ async def activate_employee(
 )
 async def deactivate_employee(
     employee_id: UUID,
+    request: Request,
     database: Database = Depends(_db),
     principal: Principal = Depends(require_roles("ADMIN", "HR")),
 ) -> Employee:
-    del principal
-    return await _set_employee_status(employee_id, "INACTIVE", database)
+    return await _set_employee_status(employee_id, "INACTIVE", database, principal, request)

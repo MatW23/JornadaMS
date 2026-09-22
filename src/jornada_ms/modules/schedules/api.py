@@ -6,7 +6,7 @@
 from datetime import date, time
 from uuid import UUID, uuid4
 
-from fastapi import APIRouter, Depends, Query
+from fastapi import APIRouter, Depends, Query, Request
 from pydantic import BaseModel, Field
 from sqlalchemy import text
 from sqlalchemy.exc import IntegrityError
@@ -14,6 +14,7 @@ from starlette import status
 
 from jornada_ms.api.errors import AppError, ErrorResponse
 from jornada_ms.db.session import Database
+from jornada_ms.modules.audit.service import record_audit
 from jornada_ms.modules.identity.api import get_identity_service, require_roles
 from jornada_ms.modules.identity.service import IdentityService, Principal
 
@@ -67,6 +68,14 @@ router = APIRouter(prefix="/api/v1", tags=["Schedules"])
 
 def _database(service: IdentityService = Depends(get_identity_service)) -> Database:
     return service.database
+
+
+def _correlation_id(request: Request) -> str:
+    return getattr(request.state, "correlation_id", "unknown")
+
+
+def _client_ip(request: Request) -> str | None:
+    return request.client.host if request.client else None
 
 
 def _schedule(row) -> WorkSchedule:
@@ -133,10 +142,10 @@ async def list_work_schedules(
 )
 async def create_work_schedule(
     payload: WorkScheduleCreate,
+    request: Request,
     database: Database = Depends(_database),
     principal: Principal = Depends(require_roles("ADMIN", "HR")),
 ) -> WorkSchedule:
-    del principal
     if payload.end_time <= payload.start_time and payload.same_day_only:
         raise AppError("INVALID_SCHEDULE", "End time must be after start time", status_code=422)
     schedule_id = str(uuid4())
@@ -170,6 +179,23 @@ async def create_work_schedule(
             .mappings()
             .one()
         )
+        record_audit(
+            connection,
+            actor_id=principal.user_id,
+            action="WORK_SCHEDULE_CREATED",
+            entity_type="WORK_SCHEDULE",
+            entity_id=schedule_id,
+            result="SUCCESS",
+            correlation_id=_correlation_id(request),
+            ip_address=_client_ip(request),
+            after_data={
+                "name": payload.name.strip(),
+                "start_time": payload.start_time.isoformat(),
+                "end_time": payload.end_time.isoformat(),
+                "same_day_only": payload.same_day_only,
+                "tolerance_minutes": payload.tolerance_minutes,
+            },
+        )
     return _schedule(row)
 
 
@@ -201,10 +227,10 @@ async def get_work_schedule(
 async def update_work_schedule(
     schedule_id: UUID,
     payload: WorkScheduleUpdate,
+    request: Request,
     database: Database = Depends(_database),
     principal: Principal = Depends(require_roles("ADMIN", "HR")),
 ) -> WorkSchedule:
-    del principal
     fields = payload.model_dump(exclude_unset=True)
     if "name" in fields:
         fields["name"] = fields["name"].strip()
@@ -257,6 +283,17 @@ async def update_work_schedule(
             .mappings()
             .one()
         )
+        record_audit(
+            connection,
+            actor_id=principal.user_id,
+            action="WORK_SCHEDULE_UPDATED",
+            entity_type="WORK_SCHEDULE",
+            entity_id=str(schedule_id),
+            result="SUCCESS",
+            correlation_id=_correlation_id(request),
+            ip_address=_client_ip(request),
+            after_data=dict(row),
+        )
     return _schedule(row)
 
 
@@ -270,10 +307,10 @@ async def update_work_schedule(
 async def assign_employee_schedule(
     employee_id: UUID,
     payload: EmployeeScheduleCreate,
+    request: Request,
     database: Database = Depends(_database),
     principal: Principal = Depends(require_roles("ADMIN", "HR")),
 ) -> EmployeeSchedule:
-    del principal
     if payload.ends_on is not None and payload.ends_on < payload.starts_on:
         raise AppError(
             "INVALID_DATE_RANGE", "Schedule end date must be after start date", status_code=422
@@ -325,6 +362,22 @@ async def assign_employee_schedule(
                     "schedule_id": str(payload.schedule_id),
                     "starts_on": payload.starts_on,
                     "ends_on": payload.ends_on,
+                },
+            )
+            record_audit(
+                connection,
+                actor_id=principal.user_id,
+                action="EMPLOYEE_SCHEDULE_ASSIGNED",
+                entity_type="EMPLOYEE_SCHEDULE",
+                entity_id=str(employee_id),
+                result="SUCCESS",
+                correlation_id=_correlation_id(request),
+                ip_address=_client_ip(request),
+                after_data={
+                    "employee_id": str(employee_id),
+                    "schedule_id": str(payload.schedule_id),
+                    "starts_on": payload.starts_on.isoformat(),
+                    "ends_on": payload.ends_on.isoformat() if payload.ends_on else None,
                 },
             )
     except IntegrityError as exc:

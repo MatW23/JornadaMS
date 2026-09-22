@@ -18,6 +18,7 @@ from starlette import status
 
 from jornada_ms.api.errors import AppError, ErrorResponse
 from jornada_ms.db.session import Database
+from jornada_ms.modules.audit.service import record_audit
 from jornada_ms.modules.identity.api import get_identity_service, require_roles
 from jornada_ms.modules.identity.service import IdentityService, Principal
 
@@ -80,6 +81,10 @@ def _database(service: IdentityService = Depends(get_identity_service)) -> Datab
 
 def _correlation_id(request: Request) -> str:
     return getattr(request.state, "correlation_id", "unknown")
+
+
+def _client_ip(request: Request) -> str | None:
+    return request.client.host if request.client else None
 
 
 def _employee_id(payload_id: UUID | None, principal: Principal) -> str:
@@ -374,11 +379,19 @@ async def create_time_event(
                 )
             previous = connection.execute(
                 text(
-                    "SELECT event_type FROM time_events WHERE employee_id = :employee_id AND work_date = :work_date ORDER BY occurred_at DESC LIMIT 1"
+                    "SELECT event_type, occurred_at FROM time_events "
+                    "WHERE employee_id = :employee_id AND work_date = :work_date "
+                    "ORDER BY occurred_at DESC LIMIT 1"
                 ),
                 {"employee_id": employee_id, "work_date": local_date},
-            ).scalar_one_or_none()
-            expected = "SAIDA" if previous == "ENTRADA" else "ENTRADA"
+            ).mappings().first()
+            if previous is not None and occurred_at <= _as_utc(_parse_datetime(previous["occurred_at"])):
+                raise AppError(
+                    "EVENT_TIME_NOT_AFTER_LAST",
+                    "The event time must be after the employee's last event",
+                    status_code=409,
+                )
+            expected = "SAIDA" if previous is not None and previous["event_type"] == "ENTRADA" else "ENTRADA"
             if payload.event_type != expected:
                 raise AppError(
                     "INVALID_EVENT_SEQUENCE", f"The next event must be {expected}", status_code=409
@@ -399,6 +412,22 @@ async def create_time_event(
                     "created_by": principal.user_id,
                     "correlation_id": _correlation_id(request),
                     "idempotency_key": idempotency_key,
+                },
+            )
+            record_audit(
+                connection,
+                actor_id=principal.user_id,
+                action="TIME_EVENT_CREATED",
+                entity_type="TIME_EVENT",
+                entity_id=event_id,
+                result="SUCCESS",
+                correlation_id=_correlation_id(request),
+                ip_address=_client_ip(request),
+                after_data={
+                    "employee_id": employee_id,
+                    "event_type": payload.event_type,
+                    "occurred_at": occurred_at.isoformat(),
+                    "source": payload.source,
                 },
             )
             events = (
