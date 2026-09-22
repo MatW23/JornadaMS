@@ -2,7 +2,7 @@
 
 Plataforma corporativa para registro, cálculo e gestão da jornada de trabalho.
 
-> Estado atual: fundação técnica e módulo de identidade implementados; colaboradores e registro de ponto ainda estão em desenvolvimento.
+> Estado atual: fundação técnica, identidade, colaboradores, registro básico de ponto, jornadas simples e cálculo inicial de saldo/atraso implementados; cálculo avançado e relatórios ainda estão em desenvolvimento.
 
 ## Objetivo
 
@@ -63,25 +63,26 @@ tests/               Testes automatizados
 
 ## Desenvolvimento local
 
-Pré-requisitos: Python 3.12+, Docker e Docker Compose.
+Pré-requisitos: Python 3.12+. O desenvolvimento local usa SQLite e não requer Docker.
 
 ```powershell
 Copy-Item .env.example .env
-docker compose up -d db
 py -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -e ".[dev]"
+$env:JORNADA_MS_DATABASE_URL="sqlite+pysqlite:///./jornada-dev.db"
 alembic upgrade head
 jornada-ms-create-user --email admin@empresa.com
+jornada-ms-create-organization --name "Empresa Demo" --cnpj 12345678000199
 pytest
 uvicorn jornada_ms.main:app --reload
 ```
 
-O comando `jornada-ms-create-user` pede a senha de forma interativa e cria o primeiro usuário administrador. Depois, abra `http://localhost:8000/` para acessar a tela web.
+Os comandos `jornada-ms-create-user` e `jornada-ms-create-organization` criam, respectivamente, o primeiro administrador e a empresa/filial inicial. Depois, abra `http://localhost:8000/` para acessar a tela web e use o menu `Colaboradores`.
 
 A aplicação fica disponível em `http://localhost:8000`; a tela web inicial fica em `/` e a documentação interativa do FastAPI fica em `/docs`. Os health checks são `GET /health/live` e `GET /health/ready`.
 
-Estado da implementação: o servidor registra os health checks, o módulo de identidade (`/api/v1/auth/login`, `/api/v1/auth/refresh`, `/api/v1/auth/logout` e `/api/v1/me`) e uma tela web inicial com login e painel. Os endpoints de colaboradores, jornadas, ponto e demais cadastros ainda retornarão `404` até que seus módulos sejam implementados e registrados na aplicação.
+Estado da implementação: o servidor registra os health checks, identidade, empresas, filiais, colaboradores, jornadas simples, registro de entrada/saída e uma tela web com login, painel, equipe, jornadas e histórico do dia. Intervalos, regras avançadas e relatórios ainda estão em desenvolvimento.
 
 ## Convenções de documentação
 
@@ -92,4 +93,4 @@ Estado da implementação: o servidor registra os health checks, o módulo de id
 
 ## Próximo passo
 
-Com a identidade em funcionamento, o próximo incremento recomendado é implementar a fatia `colaborador → jornada simples → entrada/saída → resumo diário → testes`.
+O próximo incremento recomendado é implementar a fatia `jornada simples → entrada/saída → resumo diário → testes`.

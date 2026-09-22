@@ -11,7 +11,11 @@ from jornada_ms.api.health import router as health_router
 from jornada_ms.api.middleware import CorrelationIdMiddleware
 from jornada_ms.config import Settings, get_settings
 from jornada_ms.db.session import Database
+from jornada_ms.modules.attendance.api import router as attendance_router
+from jornada_ms.modules.employees.api import router as employees_router
 from jornada_ms.modules.identity.api import router as identity_router
+from jornada_ms.modules.organization.api import router as organization_router
+from jornada_ms.modules.schedules.api import router as schedules_router
 
 
 def _frontend_directory() -> Path | None:
@@ -43,6 +47,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     register_exception_handlers(app)
     app.include_router(health_router)
     app.include_router(identity_router)
+    app.include_router(organization_router)
+    app.include_router(employees_router)
+    app.include_router(attendance_router)
+    app.include_router(schedules_router)
     frontend_directory = _frontend_directory()
     if frontend_directory is not None:
         app.mount(

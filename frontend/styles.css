@@ -128,6 +128,27 @@ button { cursor: pointer; }
 .activity-empty p { max-width: 230px; }
 .toast { background: var(--navy); border-radius: 8px; box-shadow: var(--shadow); color: #fff; font-size: 12px; opacity: 0; padding: 12px 15px; pointer-events: none; position: fixed; right: 24px; top: 24px; transform: translateY(-10px); transition: opacity 0.2s, transform 0.2s; z-index: 10; }
 .toast.visible { opacity: 1; transform: translateY(0); }
+.employees-panel { margin-top: 14px; }
+.attendance-panel { margin-top: 14px; }
+.schedules-panel { margin-top: 14px; }
+.schedule-form { align-items: end; display: grid; gap: 14px; grid-template-columns: 1.4fr repeat(3, 1fr) auto; margin: 24px 0 12px; }
+.schedule-form input, .schedule-form select { background: #fff; border: 1px solid #d0d5dd; border-radius: 10px; color: var(--ink); outline: none; padding: 11px 12px; }
+.assignment-row { align-items: end; display: flex; gap: 14px; margin: 22px 0; }
+.assignment-row .field { flex: 1; }
+.assignment-row select { background: #fff; border: 1px solid #d0d5dd; border-radius: 10px; color: var(--ink); outline: none; padding: 11px 12px; }
+.attendance-controls { align-items: end; display: flex; gap: 18px; justify-content: space-between; margin: 24px 0 12px; }
+.attendance-controls .field { max-width: 420px; width: 100%; }
+.attendance-controls select { background: #fff; border: 1px solid #d0d5dd; border-radius: 10px; color: var(--ink); outline: none; padding: 11px 12px; }
+.attendance-actions { display: flex; gap: 8px; }
+.employee-form { display: grid; gap: 14px; grid-template-columns: repeat(3, 1fr); margin: 22px 0; padding: 18px; background: var(--surface-soft); border-radius: 10px; }
+.employee-form input, .employee-form select { background: #fff; border: 1px solid #d0d5dd; border-radius: 10px; color: var(--ink); outline: none; padding: 11px 12px; }
+.employee-form-actions { align-items: end; display: flex; gap: 8px; justify-content: flex-end; grid-column: 1 / -1; }
+.table-wrap { overflow-x: auto; margin-top: 22px; }
+table { border-collapse: collapse; min-width: 600px; width: 100%; }
+th, td { border-bottom: 1px solid var(--line); font-size: 12px; padding: 13px 10px; text-align: left; }
+th { color: var(--muted); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; }
+.table-empty { color: var(--muted); padding: 30px; text-align: center; }
+.status-tag { background: #eef8d9; border-radius: 99px; color: #557519; font-size: 10px; font-weight: 800; padding: 5px 9px; }
 
 @media (max-width: 920px) {
   .auth-shell { grid-template-columns: 1fr; }
@@ -156,5 +177,11 @@ button { cursor: pointer; }
   .hero-grid { opacity: 0.16; right: -180px; }
   .section-heading { align-items: flex-start; flex-direction: column; gap: 9px; }
   .metrics-grid, .lower-grid { grid-template-columns: 1fr; }
+  .employee-form { grid-template-columns: 1fr; }
+  .attendance-controls { align-items: stretch; flex-direction: column; }
+  .attendance-controls .field { max-width: none; }
+  .attendance-actions { flex-wrap: wrap; }
+  .schedule-form { grid-template-columns: 1fr; }
+  .assignment-row { align-items: stretch; flex-direction: column; }
   .panel { min-height: 230px; }
 }
