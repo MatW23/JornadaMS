@@ -24,7 +24,7 @@ from jornada_ms.modules.identity.service import IdentityService, Principal
 
 
 class TimeEventCreate(BaseModel):
-    event_type: str = Field(pattern="^(ENTRADA|SAIDA)$")
+    event_type: str = Field(pattern="^(ENTRADA|INICIO_INTERVALO|FIM_INTERVALO|SAIDA)$")
     occurred_at: datetime
     source: str = Field(default="WEB", pattern="^WEB$")
     employee_id: UUID | None = None
@@ -123,7 +123,7 @@ def _event_from_row(row: Any) -> TimeEvent:
         occurred_at=row["occurred_at"],
         timezone=row["timezone"],
         source=row["source"],
-        status="VALID",
+        status=row.get("status", "VALID"),
     )
 
 
@@ -146,12 +146,37 @@ def _calculate_worked_minutes(rows: list[Any]) -> int:
         occurred_at = row["occurred_at"]
         if isinstance(occurred_at, str):
             occurred_at = datetime.fromisoformat(occurred_at)
-        if row["event_type"] == "ENTRADA":
+        if row["event_type"] in {"ENTRADA", "FIM_INTERVALO"}:
             opened = occurred_at
-        elif opened is not None:
+        elif row["event_type"] in {"INICIO_INTERVALO", "SAIDA"} and opened is not None:
             total += max(0, int((occurred_at - opened).total_seconds() // 60))
             opened = None
     return total
+
+
+_EVENT_TRANSITIONS = {
+    None: {"ENTRADA"},
+    "ENTRADA": {"INICIO_INTERVALO", "SAIDA"},
+    "INICIO_INTERVALO": {"FIM_INTERVALO"},
+    "FIM_INTERVALO": {"SAIDA"},
+    "SAIDA": {"ENTRADA"},
+}
+
+
+def _validate_event_sequence(rows: list[Any]) -> bool:
+    """Validate chronology and the state machine for a complete event set."""
+
+    previous_type = None
+    previous_at: datetime | None = None
+    for row in sorted(rows, key=lambda item: _as_utc(_parse_datetime(item["occurred_at"]))):
+        occurred_at = _as_utc(_parse_datetime(row["occurred_at"]))
+        if previous_at is not None and occurred_at <= previous_at:
+            return False
+        if row["event_type"] not in _EVENT_TRANSITIONS[previous_type]:
+            return False
+        previous_type = row["event_type"]
+        previous_at = occurred_at
+    return True
 
 
 def _parse_datetime(value: datetime | str) -> datetime:
@@ -171,7 +196,7 @@ def _schedule_metrics(
     schedule = (
         connection.execute(
             text(
-                "SELECT d.start_time, d.end_time, s.tolerance_minutes "
+                "SELECT d.start_time, d.break_start, d.break_end, d.end_time, s.tolerance_minutes "
                 "FROM employee_schedules es "
                 "JOIN work_schedules s ON s.id = es.schedule_id "
                 "JOIN schedule_days d ON d.schedule_id = s.id AND d.weekday = :weekday "
@@ -187,14 +212,24 @@ def _schedule_metrics(
     if schedule is None:
         return 0, 0, 0
     start = schedule["start_time"]
+    break_start = schedule["break_start"]
+    break_end = schedule["break_end"]
     end = schedule["end_time"]
     if isinstance(start, str):
         start = datetime.strptime(start, "%H:%M:%S").time()
+    if isinstance(break_start, str):
+        break_start = datetime.strptime(break_start, "%H:%M:%S").time()
+    if isinstance(break_end, str):
+        break_end = datetime.strptime(break_end, "%H:%M:%S").time()
     if isinstance(end, str):
         end = datetime.strptime(end, "%H:%M:%S").time()
     scheduled_minutes = (end.hour * 60 + end.minute) - (start.hour * 60 + start.minute)
     if scheduled_minutes < 0:
         scheduled_minutes += 24 * 60
+    if break_start is not None and break_end is not None:
+        scheduled_minutes -= (break_end.hour * 60 + break_end.minute) - (
+            break_start.hour * 60 + break_start.minute
+        )
     local_zone = _timezone(timezone)
     first_entry = next((row for row in events if row["event_type"] == "ENTRADA"), None)
     delay_minutes = 0
@@ -235,7 +270,8 @@ def _upsert_summary(
         connection.execute(
             text(
                 "SELECT event_type, occurred_at FROM time_events "
-                "WHERE employee_id = :employee_id AND work_date = :work_date ORDER BY occurred_at"
+                "WHERE employee_id = :employee_id AND work_date = :work_date AND status = 'VALID' "
+                "ORDER BY occurred_at"
             ),
             {"employee_id": employee_id, "work_date": work_date},
         )
@@ -334,7 +370,7 @@ async def create_time_event(
             existing = (
                 connection.execute(
                     text(
-                        "SELECT id, employee_id, work_date, event_type, occurred_at, timezone, source FROM time_events WHERE employee_id = :employee_id AND idempotency_key = :idempotency_key"
+                        "SELECT id, employee_id, work_date, event_type, occurred_at, timezone, source, status FROM time_events WHERE employee_id = :employee_id AND idempotency_key = :idempotency_key"
                     ),
                     {"employee_id": employee_id, "idempotency_key": idempotency_key},
                 )
@@ -356,7 +392,7 @@ async def create_time_event(
                 events = (
                     connection.execute(
                         text(
-                            "SELECT event_type, occurred_at FROM time_events WHERE employee_id = :employee_id AND work_date = :work_date ORDER BY occurred_at"
+                            "SELECT event_type, occurred_at FROM time_events WHERE employee_id = :employee_id AND work_date = :work_date AND status = 'VALID' ORDER BY occurred_at"
                         ),
                         {"employee_id": employee_id, "work_date": existing["work_date"]},
                     )
@@ -368,7 +404,7 @@ async def create_time_event(
                     employee_id,
                     existing["work_date"],
                     _calculate_worked_minutes(events),
-                    events[-1]["event_type"] == "ENTRADA",
+                    events[-1]["event_type"] in {"ENTRADA", "FIM_INTERVALO"},
                     timezone,
                 )
                 return JSONResponse(
@@ -380,7 +416,7 @@ async def create_time_event(
             previous = connection.execute(
                 text(
                     "SELECT event_type, occurred_at FROM time_events "
-                    "WHERE employee_id = :employee_id AND work_date = :work_date "
+                    "WHERE employee_id = :employee_id AND work_date = :work_date AND status = 'VALID' "
                     "ORDER BY occurred_at DESC LIMIT 1"
                 ),
                 {"employee_id": employee_id, "work_date": local_date},
@@ -391,15 +427,19 @@ async def create_time_event(
                     "The event time must be after the employee's last event",
                     status_code=409,
                 )
-            expected = "SAIDA" if previous is not None and previous["event_type"] == "ENTRADA" else "ENTRADA"
-            if payload.event_type != expected:
+            previous_type = previous["event_type"] if previous is not None else None
+            allowed = _EVENT_TRANSITIONS[previous_type]
+            if payload.event_type not in allowed:
+                expected = " ou ".join(sorted(allowed))
                 raise AppError(
-                    "INVALID_EVENT_SEQUENCE", f"The next event must be {expected}", status_code=409
+                    "INVALID_EVENT_SEQUENCE",
+                    f"The next event must be {expected}",
+                    status_code=409,
                 )
             event_id = str(uuid4())
             connection.execute(
                 text(
-                    "INSERT INTO time_events (id, employee_id, work_date, event_type, occurred_at, timezone, source, created_by, correlation_id, idempotency_key) VALUES (:id, :employee_id, :work_date, :event_type, :occurred_at, :timezone, :source, :created_by, :correlation_id, :idempotency_key)"
+                    "INSERT INTO time_events (id, employee_id, work_date, event_type, occurred_at, timezone, source, status, created_by, correlation_id, idempotency_key) VALUES (:id, :employee_id, :work_date, :event_type, :occurred_at, :timezone, :source, 'VALID', :created_by, :correlation_id, :idempotency_key)"
                 ),
                 {
                     "id": event_id,
@@ -433,7 +473,7 @@ async def create_time_event(
             events = (
                 connection.execute(
                     text(
-                        "SELECT event_type, occurred_at FROM time_events WHERE employee_id = :employee_id AND work_date = :work_date ORDER BY occurred_at"
+                        "SELECT event_type, occurred_at FROM time_events WHERE employee_id = :employee_id AND work_date = :work_date AND status = 'VALID' ORDER BY occurred_at"
                     ),
                     {"employee_id": employee_id, "work_date": local_date},
                 )
@@ -445,13 +485,13 @@ async def create_time_event(
                 employee_id,
                 local_date,
                 _calculate_worked_minutes(events),
-                events[-1]["event_type"] == "ENTRADA",
+                events[-1]["event_type"] in {"ENTRADA", "FIM_INTERVALO"},
                 timezone,
             )
             event_row = (
                 connection.execute(
                     text(
-                        "SELECT id, employee_id, work_date, event_type, occurred_at, timezone, source FROM time_events WHERE id = :id"
+                        "SELECT id, employee_id, work_date, event_type, occurred_at, timezone, source, status FROM time_events WHERE id = :id"
                     ),
                     {"id": event_id},
                 )
@@ -498,7 +538,7 @@ async def list_time_events(
         rows = (
             connection.execute(
                 text(
-                    "SELECT id, employee_id, work_date, event_type, occurred_at, timezone, source FROM time_events WHERE employee_id = :employee_id AND work_date BETWEEN :from_date AND :to_date ORDER BY occurred_at LIMIT :limit OFFSET :offset"
+                    "SELECT id, employee_id, work_date, event_type, occurred_at, timezone, source, status FROM time_events WHERE employee_id = :employee_id AND work_date BETWEEN :from_date AND :to_date ORDER BY occurred_at LIMIT :limit OFFSET :offset"
                 ),
                 params,
             )

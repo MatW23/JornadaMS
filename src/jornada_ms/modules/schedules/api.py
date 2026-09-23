@@ -22,6 +22,8 @@ from jornada_ms.modules.identity.service import IdentityService, Principal
 class WorkScheduleCreate(BaseModel):
     name: str = Field(min_length=1, max_length=160)
     start_time: time
+    break_start: time | None = None
+    break_end: time | None = None
     end_time: time
     same_day_only: bool = True
     tolerance_minutes: int = Field(default=0, ge=0, le=240)
@@ -30,6 +32,8 @@ class WorkScheduleCreate(BaseModel):
 class WorkScheduleUpdate(BaseModel):
     name: str | None = Field(default=None, min_length=1, max_length=160)
     start_time: time | None = None
+    break_start: time | None = None
+    break_end: time | None = None
     end_time: time | None = None
     same_day_only: bool | None = None
     tolerance_minutes: int | None = Field(default=None, ge=0, le=240)
@@ -39,6 +43,8 @@ class WorkSchedule(BaseModel):
     id: str
     name: str
     start_time: time
+    break_start: time | None = None
+    break_end: time | None = None
     end_time: time
     same_day_only: bool
     tolerance_minutes: int
@@ -78,11 +84,35 @@ def _client_ip(request: Request) -> str | None:
     return request.client.host if request.client else None
 
 
+def _validate_break(
+    start: time,
+    end: time,
+    break_start: time | None,
+    break_end: time | None,
+) -> None:
+    if (break_start is None) != (break_end is None):
+        raise AppError(
+            "INVALID_SCHEDULE_BREAK",
+            "Break start and break end must be provided together",
+            status_code=422,
+        )
+    if break_start is not None and break_end is not None and not (
+        start < break_start < break_end < end
+    ):
+        raise AppError(
+            "INVALID_SCHEDULE_BREAK",
+            "Break must be inside the work schedule",
+            status_code=422,
+        )
+
+
 def _schedule(row) -> WorkSchedule:
     return WorkSchedule(
         id=str(row["id"]),
         name=row["name"],
         start_time=row["start_time"],
+        break_start=row["break_start"],
+        break_end=row["break_end"],
         end_time=row["end_time"],
         same_day_only=row["same_day_only"],
         tolerance_minutes=row["tolerance_minutes"],
@@ -95,7 +125,8 @@ def _time_value(value: time | str) -> time:
 
 
 _SCHEDULE_COLUMNS = (
-    "s.id, s.name, d.start_time, d.end_time, s.same_day_only, s.tolerance_minutes, s.status"
+    "s.id, s.name, d.start_time, d.break_start, d.break_end, d.end_time, "
+    "s.same_day_only, s.tolerance_minutes, s.status"
 )
 _SCHEDULE_QUERY = f"SELECT {_SCHEDULE_COLUMNS} FROM work_schedules s JOIN schedule_days d ON d.schedule_id = s.id AND d.weekday = 0"
 
@@ -148,6 +179,12 @@ async def create_work_schedule(
 ) -> WorkSchedule:
     if payload.end_time <= payload.start_time and payload.same_day_only:
         raise AppError("INVALID_SCHEDULE", "End time must be after start time", status_code=422)
+    _validate_break(
+        payload.start_time,
+        payload.end_time,
+        payload.break_start,
+        payload.break_end,
+    )
     schedule_id = str(uuid4())
     with database.engine.begin() as connection:
         connection.execute(
@@ -164,13 +201,15 @@ async def create_work_schedule(
         for weekday in range(5):
             connection.execute(
                 text(
-                    "INSERT INTO schedule_days (id, schedule_id, weekday, start_time, end_time) VALUES (:id, :schedule_id, :weekday, :start_time, :end_time)"
+                    "INSERT INTO schedule_days (id, schedule_id, weekday, start_time, break_start, break_end, end_time) VALUES (:id, :schedule_id, :weekday, :start_time, :break_start, :break_end, :end_time)"
                 ),
                 {
                     "id": str(uuid4()),
                     "schedule_id": schedule_id,
                     "weekday": weekday,
                     "start_time": payload.start_time.isoformat(),
+                    "break_start": payload.break_start.isoformat() if payload.break_start else None,
+                    "break_end": payload.break_end.isoformat() if payload.break_end else None,
                     "end_time": payload.end_time.isoformat(),
                 },
             )
@@ -191,6 +230,8 @@ async def create_work_schedule(
             after_data={
                 "name": payload.name.strip(),
                 "start_time": payload.start_time.isoformat(),
+                "break_start": payload.break_start.isoformat() if payload.break_start else None,
+                "break_end": payload.break_end.isoformat() if payload.break_end else None,
                 "end_time": payload.end_time.isoformat(),
                 "same_day_only": payload.same_day_only,
                 "tolerance_minutes": payload.tolerance_minutes,
@@ -249,30 +290,52 @@ async def update_work_schedule(
         same_day = fields.get("same_day_only", existing["same_day_only"])
         if same_day and end_time <= start_time:
             raise AppError("INVALID_SCHEDULE", "End time must be after start time", status_code=422)
+        existing_break_start = (
+            _time_value(existing["break_start"]) if existing["break_start"] is not None else None
+        )
+        existing_break_end = (
+            _time_value(existing["break_end"]) if existing["break_end"] is not None else None
+        )
+        break_start = (
+            _time_value(fields["break_start"])
+            if "break_start" in fields and fields["break_start"] is not None
+            else (None if "break_start" in fields else existing_break_start)
+        )
+        break_end = (
+            _time_value(fields["break_end"])
+            if "break_end" in fields and fields["break_end"] is not None
+            else (None if "break_end" in fields else existing_break_end)
+        )
+        _validate_break(start_time, end_time, break_start, break_end)
         schedule_fields = {
             key: value
             for key, value in fields.items()
             if key in {"name", "same_day_only", "tolerance_minutes"}
         }
-        if schedule_fields or "start_time" in fields or "end_time" in fields:
-            if "start_time" not in schedule_fields and "end_time" not in schedule_fields:
-                schedule_fields = {}
-            assignments = ", ".join(f"{key} = :{key}" for key in schedule_fields)
-            if assignments:
-                schedule_fields["id"] = str(schedule_id)
-                connection.execute(
-                    text(
-                        f"UPDATE work_schedules SET {assignments}, updated_at = CURRENT_TIMESTAMP WHERE id = :id"
-                    ),
-                    schedule_fields,
-                )
+        if schedule_fields:
+            schedule_fields["id"] = str(schedule_id)
+            assignments = ", ".join(f"{key} = :{key}" for key in schedule_fields if key != "id")
             connection.execute(
                 text(
-                    "UPDATE schedule_days SET start_time = :start_time, end_time = :end_time WHERE schedule_id = :id"
+                    f"UPDATE work_schedules SET {assignments}, updated_at = CURRENT_TIMESTAMP WHERE id = :id"
+                ),
+                schedule_fields,
+            )
+        if (
+            "start_time" in fields
+            or "break_start" in fields
+            or "break_end" in fields
+            or "end_time" in fields
+        ):
+            connection.execute(
+                text(
+                    "UPDATE schedule_days SET start_time = :start_time, break_start = :break_start, break_end = :break_end, end_time = :end_time WHERE schedule_id = :id"
                 ),
                 {
                     "id": str(schedule_id),
                     "start_time": start_time.isoformat(),
+                    "break_start": break_start.isoformat() if break_start else None,
+                    "break_end": break_end.isoformat() if break_end else None,
                     "end_time": end_time.isoformat(),
                 },
             )

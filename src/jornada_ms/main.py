@@ -13,9 +13,11 @@ from jornada_ms.config import Settings, get_settings
 from jornada_ms.db.session import Database
 from jornada_ms.modules.attendance.api import router as attendance_router
 from jornada_ms.modules.employees.api import router as employees_router
+from jornada_ms.modules.hr.adjustments import router as adjustments_router
 from jornada_ms.modules.identity.api import router as identity_router
 from jornada_ms.modules.identity.rate_limit import LoginRateLimiter
 from jornada_ms.modules.organization.api import router as organization_router
+from jornada_ms.modules.reporting.api import router as reporting_router
 from jornada_ms.modules.schedules.api import router as schedules_router
 
 
@@ -56,6 +58,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(employees_router)
     app.include_router(attendance_router)
     app.include_router(schedules_router)
+    app.include_router(reporting_router)
+    app.include_router(adjustments_router)
     frontend_directory = _frontend_directory()
     if frontend_directory is not None:
         app.mount(

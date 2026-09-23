@@ -17,6 +17,10 @@ Dividir a primeira versão em dois incrementos:
 
 O MVP-1 será validado em uma instalação para uma única organização. Empresas e filiais permanecem no modelo como estrutura organizacional, mas não haverá isolamento SaaS entre clientes.
 
+### Evolução posterior
+
+Durante a implementação, o fluxo de intervalo e tolerância básica foi antecipado para validar a modelagem de eventos e o cálculo antes do trabalho de ajustes e relatórios. Essa antecipação não altera o critério de entrada do MVP-2: as capacidades administrativas avançadas continuam condicionadas à validação do núcleo.
+
 ## Alternativas consideradas
 
 ### Entregar todo o MVP original de uma vez

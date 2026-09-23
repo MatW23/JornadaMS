@@ -24,9 +24,9 @@ Implementado no servidor neste incremento: `POST /api/v1/auth/login`, `POST /api
 ## 3.1 Enums e schemas mínimos do MVP-1
 
 ```text
-TimeEventType = ENTRADA | SAIDA
+TimeEventType = ENTRADA | INICIO_INTERVALO | FIM_INTERVALO | SAIDA
 TimeEventSource = WEB
-TimeEventStatus = VALID | INVALID | REJECTED
+TimeEventStatus = VALID | SUPERSEDED | INVALID | REJECTED
 DailySummaryStatus = IN_PROGRESS | COMPLETE | INCONSISTENT
 EmployeeStatus = ACTIVE | INACTIVE
 ScheduleStatus = ACTIVE | INACTIVE
@@ -34,7 +34,7 @@ ScheduleStatus = ACTIVE | INACTIVE
 
 `POST /employees` recebe `name`, `registration_code`, `punch_identifier` opcional, `branch_id`, `department_id` opcional, `position_id` opcional e `user_id` opcional. `registration_code` é matrícula interna única por organização; a organização é derivada da filial e não é enviada pelo cliente. Não é CPF.
 
-`POST /work-schedules` no MVP-1 recebe `name`, `start_time`, `end_time`, `same_day_only=true` e `tolerance_minutes=0`. O fuso é herdado da filial do colaborador; não há fuso independente por jornada no MVP-1. Intervalos, tolerâncias efetivas e escalas complexas pertencem ao MVP-2.
+`POST /work-schedules` no MVP-1 recebe `name`, `start_time`, `end_time`, `same_day_only=true` e `tolerance_minutes=0`. `break_start` e `break_end` são opcionais, mas devem ser enviados juntos e ficar estritamente dentro da jornada. O fuso é herdado da filial do colaborador; não há fuso independente por jornada no MVP-1.
 
 `POST /time-events` recebe `event_type`, `occurred_at` e `source`. O `employee_id` é derivado do usuário autenticado para o papel Colaborador; um administrador só pode informar outro colaborador mediante permissão explícita.
 
@@ -109,10 +109,12 @@ As operações de empresas, filiais, colaboradores e ativação/desativação do
 | `GET/POST` | `/work-schedules` | Admin/RH | Listar/criar jornada simples (MVP-1) |
 | `GET/PATCH` | `/work-schedules/{schedule_id}` | Admin/RH | Consultar/alterar jornada (MVP-1) |
 | `POST` | `/employees/{employee_id}/schedules` | Admin/RH | Vincular jornada com vigência (MVP-1) |
-| `POST` | `/time-events` | Colaborador | Registrar entrada/saída (MVP-1) |
+| `POST` | `/time-events` | Colaborador | Registrar entrada, intervalo e saída (MVP-1) |
 | `GET` | `/time-events` | Escopo autorizado | Consultar eventos (MVP-1) |
 | `GET` | `/attendance/days` | Escopo autorizado | Consultar resumo diário (MVP-1) |
 | `GET` | `/attendance/summary` | Escopo autorizado | Consolidar período (MVP-2) |
+
+`GET /reports/attendance` gera uma prévia administrativa dos resumos diários existentes, com filtro opcional por colaborador/status, paginação e totais do período. `GET /reports/attendance/export?format=csv` (o parâmetro `format` é opcional nesta primeira versão) exporta o mesmo conjunto em CSV compatível com Excel e registra a exportação na auditoria. O período máximo é de 366 dias.
 
 Exemplo de registro do MVP-1:
 
@@ -125,6 +127,8 @@ Exemplo de registro do MVP-1:
 ```
 
 O header `Idempotency-Key` é obrigatório. Na primeira gravação, a resposta é `201 Created`; reenvio com a mesma chave e payload equivalente retorna `200 OK` com o mesmo resultado; reuso da chave com payload diferente retorna `409 Conflict` e `IDEMPOTENCY_KEY_REUSED`. O servidor serializa gravações concorrentes por colaborador e data antes de validar a sequência.
+
+A sequência aceita é `ENTRADA -> SAIDA` para jornadas sem intervalo ou `ENTRADA -> INICIO_INTERVALO -> FIM_INTERVALO -> SAIDA` quando o colaborador registra o intervalo. O par de intervalo é indivisível: não é permitido finalizar um intervalo que não foi iniciado nem sair enquanto ele estiver aberto.
 
 Resposta de referência:
 
@@ -148,20 +152,19 @@ Resposta de referência:
 
 ## 7. Justificativas e ajustes
 
-As rotas desta seção são planejadas para o MVP-2 e ainda não fazem parte do `openapi.yaml` executável.
+As solicitações de ajuste abaixo já fazem parte do `openapi.yaml` executável. A aprovação cria um evento substituto, mantém o evento anterior com status `SUPERSEDED`, recalcula o resumo diário e registra a decisão na auditoria.
 
 | Método | Endpoint | Papel mínimo | Descrição |
 | --- | --- | --- | --- |
 | `GET/POST` | `/justifications` | Colaborador/RH | Consultar/criar justificativa (MVP-2) |
 | `GET/POST` | `/adjustment-requests` | Colaborador/RH | Consultar/criar solicitação (MVP-2) |
-| `GET` | `/adjustment-requests/{id}` | Escopo autorizado | Consultar detalhe |
-| `POST` | `/adjustment-requests/{id}/approve` | Gestor/RH | Aprovar |
-| `POST` | `/adjustment-requests/{id}/reject` | Gestor/RH | Rejeitar |
+| `POST` | `/adjustment-requests/{id}/approve` | RH/Admin | Aprovar e recalcular |
+| `POST` | `/adjustment-requests/{id}/reject` | RH/Admin | Rejeitar |
 | `GET` | `/employees/{id}/attendance-history` | Escopo autorizado | Consultar histórico e versões (MVP-2) |
 
 ## 8. Relatórios, dashboard e auditoria
 
-As rotas desta seção são planejadas para o MVP-2 e ainda não fazem parte do `openapi.yaml` executável.
+As rotas desta seção ainda estão em evolução no MVP-2.
 
 | Método | Endpoint | Papel mínimo | Descrição |
 | --- | --- | --- | --- |

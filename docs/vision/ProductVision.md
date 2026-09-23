@@ -363,12 +363,12 @@ O MVP-1 deve entregar o menor fluxo completo possível:
 
 - login, logout e renovação de sessão;
 - cadastro e ativação/desativação de colaboradores;
-- configuração de uma jornada simples;
+- configuração de uma jornada simples, com intervalo opcional;
 - RBAC mínimo para administrador e colaborador.
 
 **Registro**
 
-- registro de entrada e saída;
+- registro de entrada, intervalo e saída;
 - validação de sequência;
 - registro de data/hora, fuso, origem e correlação;
 - proteção contra duplicidade e concorrência.
@@ -384,7 +384,6 @@ O MVP-1 deve entregar o menor fluxo completo possível:
 
 Após validar o MVP-1, entram:
 
-- um intervalo configurável por jornada;
 - tolerâncias e atrasos;
 - justificativas, ajustes e aprovação;
 - banco de horas e horas extras;
@@ -398,7 +397,7 @@ Após validar o MVP-1, entram:
 
 - jornadas não atravessam a meia-noite;
 - cada colaborador possui uma jornada simples vigente;
-- o cálculo usa somente entrada e saída;
+- o cálculo soma os períodos abertos e fechados pelos eventos de jornada;
 - há um fuso horário por filial;
 - não há feriados, folgas, afastamentos ou fechamento automático;
 - alterações retroativas não são permitidas sem fluxo explícito;
@@ -421,9 +420,9 @@ No MVP-1, ficam fora do escopo as capacidades do MVP-2 e as evoluções seguinte
 
 ### Critérios para conclusão
 
-O MVP-1 será considerado concluído quando login, cadastro de colaborador, jornada simples, entrada, saída, cálculo diário, histórico, RBAC mínimo, auditoria básica e testes essenciais estiverem funcionando em ambiente de validação.
+O MVP-1 será considerado concluído quando login, cadastro de colaborador, jornada simples, entrada, intervalo opcional, saída, cálculo diário, histórico, RBAC mínimo, auditoria básica e testes essenciais estiverem funcionando em ambiente de validação.
 
-O MVP-2 será considerado concluído quando justificativas, ajustes, aprovação, intervalo, banco de horas, relatórios e dashboard estiverem implementados, testados e validados com usuários de RH.
+O MVP-2 será considerado concluído quando justificativas, ajustes, aprovação, banco de horas, relatórios e dashboard estiverem implementados, testados e validados com usuários de RH.
 
 ## 11. Funcionalidades Futuras
 Visão de Evolução

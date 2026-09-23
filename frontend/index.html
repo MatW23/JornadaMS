@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#101828" />
     <title>JornadaMS | Gestão da jornada</title>
-    <link rel="stylesheet" href="/static/styles.css" />
+    <link rel="stylesheet" href="/static/styles.css?v=ui-settings-3" />
   </head>
   <body>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
@@ -71,20 +71,29 @@
           </div>
           <span class="workspace-label">ÁREA DE TRABALHO</span>
           <nav class="nav-list" aria-label="Navegação principal">
-            <button id="overview-nav" class="nav-item active" type="button">
+            <button id="overview-nav" class="nav-item admin-only active" type="button">
               <span class="nav-icon">▦</span><span>Visão geral</span>
             </button>
-            <button id="attendance-nav" class="nav-item" type="button">
-              <span class="nav-icon">◷</span><span>Registro de ponto</span>
+            <button id="attendance-nav" class="nav-item admin-only" type="button">
+              <span class="nav-icon">◷</span><span>Registros</span>
             </button>
-            <button id="schedules-nav" class="nav-item" type="button">
+            <button id="schedules-nav" class="nav-item admin-only" type="button">
               <span class="nav-icon">◫</span><span>Jornadas</span>
             </button>
-            <button id="employees-nav" class="nav-item" type="button">
+            <button id="employees-nav" class="nav-item admin-only" type="button">
               <span class="nav-icon">♙</span><span>Colaboradores</span>
             </button>
-            <button class="nav-item nav-item-disabled" type="button" disabled>
-              <span class="nav-icon">▤</span><span>Relatórios</span><small>em breve</small>
+            <button id="employee-attendance-nav" class="nav-item employee-only hidden" type="button">
+              <span class="nav-icon">◷</span><span>Meu ponto</span>
+            </button>
+            <button id="reports-nav" class="nav-item admin-only" type="button">
+              <span class="nav-icon">▤</span><span>Relatórios</span>
+            </button>
+            <button id="adjustments-nav" class="nav-item admin-only" type="button">
+              <span class="nav-icon">↺</span><span>Ajustes</span>
+            </button>
+            <button id="employee-adjustments-nav" class="nav-item employee-only hidden" type="button">
+              <span class="nav-icon">↺</span><span>Solicitações</span>
             </button>
           </nav>
         </div>
@@ -93,6 +102,7 @@
           <div class="user-mini">
             <div id="user-avatar" class="avatar">U</div>
             <div class="user-mini-info"><strong id="user-email">Usuário</strong><span id="user-role">Sessão ativa</span></div>
+            <button id="settings-button" class="icon-button" type="button" title="Configurações" aria-label="Abrir configurações">⚙</button>
             <button id="logout-button" class="icon-button" type="button" title="Sair">↗</button>
           </div>
         </div>
@@ -107,10 +117,12 @@
           <div class="topbar-actions">
             <div id="database-status" class="connection-status"><span class="status-dot"></span><span>Verificando conexão...</span></div>
             <div id="current-date" class="current-date"></div>
+            <button id="mobile-settings-button" class="icon-button mobile-settings-button" type="button" title="Configurações" aria-label="Abrir configurações">⚙</button>
           </div>
         </header>
 
         <div class="page-content">
+          <div id="overview-view" class="page-view">
           <section class="hero-card">
             <div class="hero-content">
               <p class="eyebrow eyebrow-soft">PAINEL INICIAL</p>
@@ -127,21 +139,22 @@
           <div class="section-heading"><div><p class="eyebrow">ACOMPANHAMENTO</p><h2>Resumo da operação</h2></div><span class="period-label">Hoje · <span id="summary-date"></span></span></div>
           <section class="metrics-grid">
             <article class="metric-card metric-card-highlight"><div class="metric-top"><span class="metric-label">Status da conta</span><span class="metric-icon">✓</span></div><strong>Ativa</strong><p>Seu acesso está liberado</p></article>
-            <article class="metric-card"><div class="metric-top"><span class="metric-label">Jornada de hoje</span><span class="metric-icon muted">◷</span></div><strong>Em preparação</strong><p>Jornada simples em breve</p></article>
+            <article class="metric-card"><div class="metric-top"><span class="metric-label">Jornada de hoje</span><span class="metric-icon muted">◷</span></div><strong>Configurável</strong><p>Gerencie horários da equipe</p></article>
             <article class="metric-card"><div class="metric-top"><span class="metric-label">Última marcação</span><span class="metric-icon muted">↗</span></div><strong>—</strong><p>Nenhum registro ainda</p></article>
             <article class="metric-card"><div class="metric-top"><span class="metric-label">Conexão</span><span class="metric-icon muted">⌁</span></div><strong id="connection-value">Online</strong><p id="connection-description">API disponível</p></article>
           </section>
 
           <section class="lower-grid">
             <article class="panel panel-main">
-              <div class="panel-heading"><div><p class="eyebrow">PRÓXIMA ENTREGA</p><h2>Registro de ponto</h2></div><span class="coming-badge">Em breve</span></div>
-              <div class="empty-state"><div class="empty-icon">◷</div><h3>Seu relógio começa aqui</h3><p>Registre entrada e saída e acompanhe o histórico do dia.</p><button id="open-attendance-button" class="button button-primary" type="button">Registrar ponto</button></div>
+              <div class="panel-heading"><div><p class="eyebrow">ACESSO RÁPIDO</p><h2>Registros de ponto</h2></div><span class="coming-badge">Disponível</span></div>
+              <div class="empty-state"><div class="empty-icon">◷</div><h3>Consulte os registros do dia</h3><p>Acompanhe as marcações e o resumo diário da equipe.</p><button id="open-attendance-button" class="button button-primary" type="button">Ver registros</button></div>
             </article>
             <article class="panel panel-side">
               <div class="panel-heading"><div><p class="eyebrow">ATIVIDADE</p><h2>Histórico recente</h2></div></div>
               <div class="activity-empty"><span class="activity-line"></span><p>As atividades aparecerão aqui quando os registros de jornada forem habilitados.</p></div>
             </article>
           </section>
+          </div>
 
           <section id="employees-panel" class="panel employees-panel hidden">
             <div class="panel-heading">
@@ -160,12 +173,12 @@
 
           <section id="attendance-panel" class="panel attendance-panel hidden">
             <div class="panel-heading">
-              <div><p class="eyebrow">JORNADA DE HOJE</p><h2>Registro de ponto</h2></div>
+              <div><p class="eyebrow">JORNADA DE HOJE</p><h2 id="attendance-title">Registros de ponto</h2></div>
               <span id="attendance-summary" class="coming-badge">Nenhuma marcação</span>
             </div>
             <div class="attendance-controls">
-              <label class="field"><span>Colaborador</span><select id="attendance-employee" required></select></label>
-              <div class="attendance-actions"><button id="clock-in-button" class="button button-primary" type="button">Registrar entrada</button><button id="clock-out-button" class="button button-secondary" type="button">Registrar saída</button></div>
+              <label id="attendance-employee-field" class="field"><span>Colaborador</span><select id="attendance-employee" required></select></label>
+              <div id="attendance-actions" class="attendance-actions employee-only hidden"><button id="clock-in-button" class="button button-primary" type="button">Registrar entrada</button><button id="break-start-button" class="button button-secondary" type="button">Iniciar intervalo</button><button id="break-end-button" class="button button-secondary" type="button">Encerrar intervalo</button><button id="clock-out-button" class="button button-secondary" type="button">Registrar saída</button></div>
             </div>
             <p id="attendance-error" class="form-error" role="alert"></p>
             <div class="table-wrap"><table><thead><tr><th>Horário</th><th>Tipo</th><th>Origem</th><th>Status</th></tr></thead><tbody id="attendance-table"><tr><td colspan="4" class="table-empty">Nenhuma marcação hoje.</td></tr></tbody></table></div>
@@ -176,6 +189,8 @@
             <form id="schedule-form" class="schedule-form">
               <label class="field"><span>Nome da jornada</span><input id="schedule-name" required maxlength="160" placeholder="Comercial" /></label>
               <label class="field"><span>Entrada</span><input id="schedule-start" type="time" required value="08:00" /></label>
+              <label class="field"><span>Início do intervalo</span><input id="schedule-break-start" type="time" value="12:00" /></label>
+              <label class="field"><span>Fim do intervalo</span><input id="schedule-break-end" type="time" value="13:00" /></label>
               <label class="field"><span>Saída</span><input id="schedule-end" type="time" required value="17:00" /></label>
               <label class="field"><span>Tolerância (minutos)</span><input id="schedule-tolerance" type="number" min="0" max="240" value="10" required /></label>
               <button class="button button-primary" type="submit">Criar jornada</button>
@@ -184,10 +199,76 @@
             <div class="assignment-row"><label class="field"><span>Vincular jornada</span><select id="schedule-select"></select></label><label class="field"><span>Ao colaborador</span><select id="schedule-employee"></select></label><button id="assign-schedule-button" class="button button-secondary" type="button">Vincular</button></div>
             <div class="table-wrap"><table><thead><tr><th>Jornada</th><th>Horário</th><th>Tolerância</th><th>Status</th></tr></thead><tbody id="schedules-table"><tr><td colspan="4" class="table-empty">Nenhuma jornada cadastrada.</td></tr></tbody></table></div>
           </section>
+
+          <section id="reports-panel" class="panel reports-panel hidden">
+            <div class="panel-heading">
+              <div><p class="eyebrow">ANÁLISE OPERACIONAL</p><h2>Relatório de jornada</h2></div>
+              <button id="export-report-button" class="button button-secondary" type="button">Exportar CSV</button>
+            </div>
+            <form id="report-form" class="report-toolbar">
+              <label class="field"><span>De</span><input id="report-from" type="date" required /></label>
+              <label class="field"><span>Até</span><input id="report-to" type="date" required /></label>
+              <label class="field"><span>Colaborador</span><select id="report-employee"><option value="">Todos</option></select></label>
+              <label class="field"><span>Status</span><select id="report-status"><option value="">Todos</option><option value="COMPLETE">Completo</option><option value="IN_PROGRESS">Em andamento</option><option value="INCONSISTENT">Inconsistente</option></select></label>
+              <button class="button button-primary" type="submit">Atualizar</button>
+            </form>
+            <p id="report-error" class="form-error" role="alert"></p>
+            <div class="report-metrics">
+              <article class="metric-card"><span class="metric-label">Horas trabalhadas</span><strong id="report-worked">0h00</strong></article>
+              <article class="metric-card"><span class="metric-label">Horas previstas</span><strong id="report-scheduled">0h00</strong></article>
+              <article class="metric-card"><span class="metric-label">Saldo</span><strong id="report-balance">0h00</strong></article>
+              <article class="metric-card"><span class="metric-label">Atrasos</span><strong id="report-delay">0h00</strong></article>
+            </div>
+            <div class="table-wrap"><table><thead><tr><th>Data</th><th>Colaborador</th><th>Previsto</th><th>Trabalhado</th><th>Saldo</th><th>Atraso</th><th>Status</th></tr></thead><tbody id="reports-table"><tr><td colspan="7" class="table-empty">Informe um período para consultar.</td></tr></tbody></table></div>
+          </section>
+
+          <section id="adjustments-panel" class="panel adjustments-panel hidden">
+            <div class="panel-heading">
+              <div><p class="eyebrow">CONTROLE E AUDITORIA</p><h2 id="adjustments-title">Solicitações de ajuste</h2></div>
+              <span class="coming-badge">Fluxo aprovado</span>
+            </div>
+            <form id="adjustment-form" class="adjustment-form employee-only hidden">
+              <label class="field"><span>Evento relacionado (opcional)</span><select id="adjustment-target"><option value="">Nova marcação</option></select></label>
+              <label class="field"><span>Tipo</span><select id="adjustment-event-type"><option value="ENTRADA">Entrada</option><option value="INICIO_INTERVALO">Início do intervalo</option><option value="FIM_INTERVALO">Fim do intervalo</option><option value="SAIDA">Saída</option></select></label>
+              <label class="field"><span>Data e hora proposta</span><input id="adjustment-occurred-at" type="datetime-local" required /></label>
+              <label class="field adjustment-reason"><span>Motivo</span><textarea id="adjustment-reason" minlength="10" maxlength="1000" required placeholder="Explique o motivo da solicitação"></textarea></label>
+              <div class="employee-form-actions"><button class="button button-primary" type="submit">Enviar solicitação</button></div>
+            </form>
+            <p id="adjustment-error" class="form-error" role="alert"></p>
+            <div class="table-wrap"><table><thead><tr><th>Data</th><th>Colaborador</th><th>Proposta</th><th>Motivo</th><th>Status</th><th>Ação</th></tr></thead><tbody id="adjustments-table"><tr><td colspan="6" class="table-empty">Nenhuma solicitação encontrada.</td></tr></tbody></table></div>
+          </section>
         </div>
       </main>
     </section>
 
-    <script src="/static/app.js?v=schedules-1"></script>
+    <div id="settings-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="settings-title">
+      <section class="settings-card">
+        <div class="panel-heading">
+          <div><p class="eyebrow">PREFERÊNCIAS</p><h2 id="settings-title">Configurações</h2></div>
+          <button id="close-settings-button" class="icon-button settings-close" type="button" aria-label="Fechar configurações">×</button>
+        </div>
+        <p class="settings-description">Personalize a aparência deste dispositivo. As preferências ficam somente neste navegador.</p>
+        <div class="settings-group">
+          <span class="settings-label">Tema</span>
+          <div class="settings-options" role="group" aria-label="Tema da aplicação">
+            <button class="settings-option" data-theme-choice="light" type="button">Claro</button>
+            <button class="settings-option" data-theme-choice="dark" type="button">Escuro</button>
+            <button class="settings-option" data-theme-choice="system" type="button">Sistema</button>
+          </div>
+        </div>
+        <div class="settings-group">
+          <span class="settings-label">Cor de destaque</span>
+          <div class="accent-options" role="group" aria-label="Cor de destaque">
+            <button class="accent-option accent-lime" data-accent-choice="lime" type="button" aria-label="Verde lima"></button>
+            <button class="accent-option accent-blue" data-accent-choice="blue" type="button" aria-label="Azul"></button>
+            <button class="accent-option accent-violet" data-accent-choice="violet" type="button" aria-label="Violeta"></button>
+            <button class="accent-option accent-orange" data-accent-choice="orange" type="button" aria-label="Laranja"></button>
+          </div>
+        </div>
+        <div class="settings-footer"><button id="close-settings-footer" class="button button-primary" type="button">Concluir</button></div>
+      </section>
+    </div>
+
+    <script src="/static/app.js?v=ui-split-4"></script>
   </body>
 </html>

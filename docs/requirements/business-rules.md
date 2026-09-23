@@ -31,8 +31,8 @@ Para o primeiro incremento, as regras são deliberadamente menores:
 
 | BR | Regra |
 | --- | --- |
-| BR-001 | O MVP-1 reconhece `ENTRADA` e `SAIDA`. O MVP-2 adiciona `INICIO_INTERVALO` e `FIM_INTERVALO`. |
-| BR-002 | No MVP-1, a sequência normal é `ENTRADA → SAIDA`. No MVP-2, a sequência será `ENTRADA → INICIO_INTERVALO → FIM_INTERVALO → SAIDA`. |
+| BR-001 | O sistema reconhece `ENTRADA`, `INICIO_INTERVALO`, `FIM_INTERVALO` e `SAIDA`. |
+| BR-002 | A sequência normal pode ser `ENTRADA → SAIDA` ou `ENTRADA → INICIO_INTERVALO → FIM_INTERVALO → SAIDA`, conforme a jornada configurada e a operação do colaborador. |
 | BR-003 | Um evento fora da sequência esperada deve ser rejeitado ou marcado como inconsistência, conforme o contexto definido pela política de RH; não pode ser silenciosamente aceito. |
 | BR-004 | O colaborador só pode registrar a própria jornada; registros em nome de outra pessoa exigem permissão administrativa e fluxo de ajuste. |
 | BR-005 | O mesmo comando não pode criar eventos duplicados. A API deve exigir uma chave de idempotência para o registro de ponto. |
@@ -43,7 +43,7 @@ Para o primeiro incremento, as regras são deliberadamente menores:
 
 | BR | Regra |
 | --- | --- |
-| BR-008 | No MVP-1, horas trabalhadas correspondem ao intervalo entre `ENTRADA` e `SAIDA`, desde que ambos ocorram na mesma data de negócio. No MVP-2, intervalos serão descontados. |
+| BR-008 | Horas trabalhadas são a soma dos períodos `ENTRADA → INICIO_INTERVALO` e `FIM_INTERVALO → SAIDA`, ou `ENTRADA → SAIDA` quando não houver intervalo registrado. |
 | BR-009 | O resumo diário do MVP-1 deve indicar jornada prevista, jornada realizada, saldo básico e inconsistências. Atrasos, horas extras e banco de horas entram no MVP-2. |
 | BR-010 | No MVP-1, o saldo básico é `jornada realizada - jornada prevista`, sem arredondamento ou tolerância. Parâmetros adicionais entram no MVP-2. |
 | BR-011 | Horas extras são o saldo positivo elegível após tolerância e demais parâmetros configurados. Percentuais, limites e aprovação devem ser parametrizáveis. |
@@ -87,7 +87,7 @@ Para o primeiro incremento, as regras são deliberadamente menores:
 ## 8. Decisões fechadas para o MVP-1
 
 - jornada no mesmo dia;
-- entrada e saída como único ciclo;
+- entrada e saída como ciclo direto, ou entrada, intervalo e saída quando o intervalo for usado;
 - um fuso por filial;
 - cálculo em minutos, sem arredondamento;
 - nenhuma regra de feriado, folga ou afastamento;

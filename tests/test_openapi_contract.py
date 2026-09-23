@@ -18,6 +18,8 @@ def test_openapi_contract_separates_versioned_api_and_health_checks():
     assert "/api/v1/employees/{employee_id}/activate" in paths
     assert "/api/v1/employees/{employee_id}/deactivate" in paths
     assert "/api/v1/work-schedules/{schedule_id}" in paths
+    assert "/api/v1/reports/attendance" in paths
+    assert "/api/v1/reports/attendance/export" in paths
     assert "/health/live" in paths
     assert "/health/ready" in paths
     assert "/auth/login" not in paths
@@ -32,6 +34,20 @@ def test_openapi_contract_separates_versioned_api_and_health_checks():
         "ACTIVE",
         "INACTIVE",
     ]
+    event_type_enum = contract["components"]["schemas"]["TimeEventCreate"]["properties"][
+        "event_type"
+    ]["enum"]
+    assert event_type_enum == [
+        "ENTRADA",
+        "INICIO_INTERVALO",
+        "FIM_INTERVALO",
+        "SAIDA",
+    ]
+    assert "break_start" in contract["components"]["schemas"]["WorkScheduleCreate"]["properties"]
+    assert "break_end" in contract["components"]["schemas"]["WorkScheduleCreate"]["properties"]
+    assert "AttendanceReportPage" in contract["components"]["schemas"]
+    assert "AdjustmentRequestPage" in contract["components"]["schemas"]
+    assert "SUPERSEDED" in contract["components"]["schemas"]["TimeEvent"]["properties"]["status"]["enum"]
 
 
 def test_openapi_contract_has_valid_references_and_unique_operation_ids():

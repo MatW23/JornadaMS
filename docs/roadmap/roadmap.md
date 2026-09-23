@@ -8,13 +8,13 @@ O roadmap detalhado de produto está na [Product Vision](../vision/ProductVision
 
 ### MVP-1 — Registro básico
 
-**Entregas:** login, logout, sessões, cadastro de colaboradores, jornada simples, entrada, saída, validação de sequência, cálculo diário básico, histórico, RBAC mínimo e auditoria básica.
+**Entregas:** login, logout, sessões, cadastro de colaboradores, jornada simples, entrada, saída, validação de sequência, cálculo diário básico, histórico, RBAC mínimo, auditoria básica e separação visual entre área administrativa e registro do colaborador.
 
 **Critérios de saída:** usuário autenticado consegue registrar entrada e saída uma única vez por operação, consultar o resumo diário e obter resultado consistente sob reenvio e concorrência.
 
 ### MVP-2 — Gestão administrativa
 
-**Entregas:** intervalo, tolerâncias, atrasos, justificativas, ajustes, aprovação, banco de horas, horas extras, relatórios, exportações, dashboard e auditoria avançada.
+**Entregas:** intervalo e tolerâncias (antecipados para a validação técnica atual), atrasos, justificativas, ajustes, aprovação, banco de horas, horas extras, relatórios, exportações, dashboard e auditoria avançada.
 
 **Critérios de saída:** regras administrativas validadas por RH, relatórios conferidos, operações críticas auditáveis, testes essenciais aprovados e validação com usuários representativos.
 

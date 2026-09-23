@@ -133,7 +133,9 @@ async def test_admin_can_create_and_update_employee(
 
 
 @pytest.mark.anyio
-async def test_attendance_enforces_entry_exit_sequence(employee_client: httpx.AsyncClient) -> None:
+async def test_attendance_enforces_entry_exit_sequence(
+    employee_client: httpx.AsyncClient, employee_context
+) -> None:
     login = await employee_client.post(
         "/api/v1/auth/login",
         json={"email": "admin@example.com", "password": "correct horse battery staple"},
@@ -263,6 +265,110 @@ async def test_attendance_enforces_entry_exit_sequence(employee_client: httpx.As
     )
     assert chronological_conflict.status_code == 409
     assert chronological_conflict.json()["error"]["code"] == "EVENT_TIME_NOT_AFTER_LAST"
+
+    interval_events = []
+    for event_type, occurred_at, key in (
+        ("ENTRADA", "2026-09-22T08:00:00-03:00", "attendance-day-two-entry"),
+        ("INICIO_INTERVALO", "2026-09-22T12:00:00-03:00", "attendance-day-two-break-start"),
+        ("FIM_INTERVALO", "2026-09-22T13:00:00-03:00", "attendance-day-two-break-end"),
+        ("SAIDA", "2026-09-22T17:00:00-03:00", "attendance-day-two-exit"),
+    ):
+        interval_events.append(
+            await employee_client.post(
+                "/api/v1/time-events",
+                headers={**headers, "Idempotency-Key": key},
+                json={
+                    "employee_id": employee_id,
+                    "event_type": event_type,
+                    "occurred_at": occurred_at,
+                    "source": "WEB",
+                },
+            )
+        )
+    assert [response.status_code for response in interval_events] == [201, 201, 201, 201]
+    assert interval_events[-1].json()["daily_summary"]["worked_minutes"] == 480
+
+    report = await employee_client.get(
+        "/api/v1/reports/attendance?from=2026-09-22&to=2026-09-22",
+        headers=headers,
+    )
+    assert report.status_code == 200
+    assert report.json()["total_items"] == 1
+    assert report.json()["items"][0]["worked_minutes"] == 480
+    assert report.json()["totals"]["worked_minutes"] == 480
+
+    export = await employee_client.get(
+        "/api/v1/reports/attendance/export?from=2026-09-22&to=2026-09-22",
+        headers=headers,
+    )
+    assert export.status_code == 200
+    assert export.headers["content-type"].startswith("text/csv")
+    assert "jornada-relatorio.csv" in export.headers["content-disposition"]
+    assert "João do Ponto" in export.text
+
+    adjustment = await employee_client.post(
+        "/api/v1/adjustment-requests",
+        headers=headers,
+        json={
+            "target_event_id": interval_events[0].json()["event"]["id"],
+            "event_type": "ENTRADA",
+            "occurred_at": "2026-09-22T08:05:00-03:00",
+            "reason": "Correção do horário de entrada registrado incorretamente.",
+        },
+    )
+    assert adjustment.status_code == 201, adjustment.text
+    assert adjustment.json()["status"] == "PENDING"
+
+    self_approval = await employee_client.post(
+        f"/api/v1/adjustment-requests/{adjustment.json()['id']}/approve",
+        headers=headers,
+        json={"comment": "Não deveria aprovar a própria solicitação."},
+    )
+    assert self_approval.status_code == 403
+
+    IdentityService(
+        employee_context.state.database, employee_context.state.settings
+    ).create_user("hr@example.com", "another secure password", ["HR"])
+    hr_login = await employee_client.post(
+        "/api/v1/auth/login",
+        json={"email": "hr@example.com", "password": "another secure password"},
+    )
+    hr_headers = {"Authorization": f"Bearer {hr_login.json()['access_token']}"}
+    approved = await employee_client.post(
+        f"/api/v1/adjustment-requests/{adjustment.json()['id']}/approve",
+        headers=hr_headers,
+        json={"comment": "Conferido pelo RH."},
+    )
+    assert approved.status_code == 200
+    assert approved.json()["status"] == "APPROVED"
+    assert approved.json()["result_event_id"]
+
+    updated_report = await employee_client.get(
+        "/api/v1/reports/attendance?from=2026-09-22&to=2026-09-22",
+        headers=hr_headers,
+    )
+    assert updated_report.status_code == 200
+    assert updated_report.json()["totals"]["worked_minutes"] == 475
+
+    rejected_request = await employee_client.post(
+        "/api/v1/adjustment-requests",
+        headers=headers,
+        json={
+            "target_event_id": interval_events[1].json()["event"]["id"],
+            "event_type": "INICIO_INTERVALO",
+            "occurred_at": "2026-09-22T12:05:00-03:00",
+            "reason": "Solicitação de teste para validar a rejeição pelo RH.",
+        },
+    )
+    assert rejected_request.status_code == 201
+    rejected = await employee_client.post(
+        f"/api/v1/adjustment-requests/{rejected_request.json()['id']}/reject",
+        headers=hr_headers,
+        json={"comment": "Horário confirmado no registro original."},
+    )
+    assert rejected.status_code == 200
+    assert rejected.json()["status"] == "REJECTED"
+
     missing_key = await employee_client.post(
         "/api/v1/time-events",
         headers=headers,
@@ -345,7 +451,23 @@ async def test_admin_can_create_and_assign_work_schedule(
     updated = await employee_client.patch(
         f"/api/v1/work-schedules/{schedule.json()['id']}",
         headers=headers,
-        json={"start_time": "09:00:00", "end_time": "18:00:00"},
+        json={
+            "start_time": "09:00:00",
+            "break_start": "12:00:00",
+            "break_end": "13:00:00",
+            "end_time": "18:00:00",
+        },
     )
     assert updated.status_code == 200
     assert updated.json()["start_time"] == "09:00:00"
+    assert updated.json()["break_start"] == "12:00:00"
+    assert updated.json()["break_end"] == "13:00:00"
+
+    metadata_updated = await employee_client.patch(
+        f"/api/v1/work-schedules/{schedule.json()['id']}",
+        headers=headers,
+        json={"name": "Comercial atualizada", "tolerance_minutes": 15},
+    )
+    assert metadata_updated.status_code == 200
+    assert metadata_updated.json()["name"] == "Comercial atualizada"
+    assert metadata_updated.json()["tolerance_minutes"] == 15

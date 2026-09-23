@@ -2,7 +2,7 @@
 
 Plataforma corporativa para registro, cálculo e gestão da jornada de trabalho.
 
-> Estado atual: fundação técnica, identidade, colaboradores, registro básico de ponto, jornadas simples e cálculo inicial de saldo/atraso implementados; cálculo avançado e relatórios ainda estão em desenvolvimento.
+> Estado atual: fundação técnica, identidade, colaboradores, jornadas com intervalo, registro de ponto por perfil, cálculo inicial de saldo/atraso e preferências visuais implementados; ajustes, cálculo avançado e relatórios ainda estão em desenvolvimento.
 
 ## Objetivo
 
@@ -28,9 +28,9 @@ O JornadaMS substitui controles manuais de ponto por uma solução centralizada,
 
 ## Escopo incremental
 
-O [MVP-1](docs/vision/ProductVision.md#10-escopo-do-mvp) entrega login, cadastro de colaboradores, jornada simples, entrada, saída, histórico, validação de sequência, cálculo diário básico e auditoria mínima.
+O [MVP-1](docs/vision/ProductVision.md#10-escopo-do-mvp) entrega login, cadastro de colaboradores, jornada simples, entrada, saída, histórico, validação de sequência, cálculo diário básico e auditoria mínima. A interface já separa a experiência administrativa da tela exclusiva de registro do colaborador, e o fluxo de intervalo foi antecipado para validação técnica.
 
-O MVP-2 adiciona intervalo, justificativas, ajustes, aprovações, banco de horas, relatórios, exportações, dashboard e auditoria administrativa avançada.
+O MVP-2 continua adicionando justificativas, ajustes, aprovações, banco de horas, relatórios, exportações, dashboard e auditoria administrativa avançada.
 
 O MVP será implantado para uma única organização. Empresas e filiais permanecem no modelo como estrutura organizacional, mas não existe isolamento SaaS entre clientes. Reconhecimento facial, dispositivos biométricos, RFID, QR Code, integrações externas, API pública, aplicativo mobile, notificações em tempo real e multiidioma continuam fora do escopo.
 
@@ -84,7 +84,7 @@ A aplicação fica disponível em `http://localhost:8000`; a tela web inicial fi
 
 Para validar o ambiente com PostgreSQL em containers, execute `docker compose up -d --build`, aplique `docker compose exec api alembic upgrade head` e então crie o usuário inicial com `docker compose exec api jornada-ms-create-user --email admin@empresa.com`.
 
-Estado da implementação: o servidor registra os health checks, identidade, empresas, filiais, colaboradores, jornadas simples, registro de entrada/saída e uma tela web com login, painel, equipe, jornadas e histórico do dia. Intervalos, regras avançadas e relatórios ainda estão em desenvolvimento.
+Estado da implementação: o servidor registra os health checks, identidade, empresas, filiais, colaboradores, jornadas com intervalo, eventos de entrada/intervalo/saída e resumos diários. A tela web possui login, área administrativa, tela exclusiva do colaborador, configurações de tema/cor, equipe, jornadas e histórico do dia. Ajustes, regras avançadas e relatórios ainda estão em desenvolvimento.
 
 ## Convenções de documentação
 
@@ -95,4 +95,4 @@ Estado da implementação: o servidor registra os health checks, identidade, emp
 
 ## Próximo passo
 
-O próximo incremento recomendado é implementar a fatia `jornada simples → entrada/saída → resumo diário → testes`.
+O próximo incremento recomendado é implementar `justificativas/ajustes → aprovação → relatório operacional`, preservando a auditoria e o recálculo do resumo diário.

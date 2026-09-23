@@ -32,3 +32,38 @@ jobs:
         run: |
           alembic upgrade head
           alembic downgrade base
+
+  postgres-migration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: jornada_ms
+          POSTGRES_PASSWORD: jornada_ms
+          POSTGRES_DB: jornada_ms
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U jornada_ms -d jornada_ms"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: python -m pip install --upgrade pip && python -m pip install -e "."
+
+      - name: Validate PostgreSQL migrations
+        env:
+          JORNADA_MS_DATABASE_URL: "postgresql+psycopg://jornada_ms:jornada_ms@localhost:5432/jornada_ms"
+        run: |
+          alembic upgrade head
+          alembic downgrade base

@@ -7,6 +7,8 @@ Ainda não há um arquivo ou link Figma definido no repositório. Este documento
 ## 2. Princípios de experiência
 
 - **Registro rápido:** a ação principal do colaborador deve ficar visível sem navegação complexa.
+- **Separação por perfil:** a área administrativa consulta e configura; somente a experiência do colaborador exibe as ações de bater ponto.
+- **Preferências locais:** configurações de tema e cor de destaque devem ser acessíveis pelo ícone de configurações e persistir no navegador do dispositivo.
 - **Transparência:** eventos, saldo e inconsistências devem ser apresentados com linguagem clara.
 - **Contexto antes da ação:** ações administrativas exibem colaborador, período e impacto antes da confirmação.
 - **Segurança sem atrito:** permissões ocultam ações indevidas, mas erros de autorização continuam compreensíveis.

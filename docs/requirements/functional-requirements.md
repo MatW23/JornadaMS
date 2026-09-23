@@ -32,17 +32,17 @@ Neste documento, “primeira versão” significa o MVP-1. Requisitos `Should` f
 | --- | --- | --- | --- |
 | FR-005 | Must | RH/admin deve cadastrar, consultar, editar, ativar e desativar colaboradores. | Colaborador inativo não pode registrar ponto; histórico permanece preservado. |
 | FR-006 | Should | RH/admin deve manter empresas, filiais, departamentos e cargos. | Cada cadastro possui identificador, nome, status e histórico de criação/alteração. No MVP-1, uma organização e uma estrutura mínima podem ser provisionadas. |
-| FR-007 | Must | RH deve definir uma jornada simples no mesmo dia, com entrada e saída. | Uma configuração ativa pode ser vinculada ao colaborador e usada pelo cálculo. Intervalo, tolerância e escalas entram no MVP-2. |
+| FR-007 | Must | RH deve definir uma jornada simples no mesmo dia, com entrada e saída e intervalo opcional. | Uma configuração ativa pode ser vinculada ao colaborador e usada pelo cálculo; início e fim do intervalo são opcionais, mas devem ser informados em conjunto. |
 | FR-008 | Must | O sistema deve validar campos obrigatórios e unicidade dos cadastros. | Duplicidades e dados inválidos são rejeitados com mensagem acionável. |
 
 ## 5. Registro e cálculo da jornada
 
 | ID | Prioridade | Requisito | Critério de aceite |
 | --- | --- | --- | --- |
-| FR-009 | Must | Colaborador deve registrar entrada e saída; intervalos serão adicionados no MVP-2. | Cada evento válido é persistido com data/hora, usuário e metadados disponíveis. |
+| FR-009 | Must | Colaborador deve registrar entrada, início/fim do intervalo e saída conforme a sequência aplicável. | Cada evento válido é persistido com data/hora, usuário e metadados disponíveis; a sequência direta entrada/saída continua válida para jornadas sem intervalo. |
 | FR-010 | Must | O sistema deve validar a sequência dos eventos. | Evento fora de ordem é recusado ou marcado como inconsistência conforme a regra aplicável. |
 | FR-011 | Must | O sistema deve impedir duplicidade acidental de um mesmo registro. | Reenvio da mesma operação não cria um segundo evento. |
-| FR-012 | Must | O sistema deve calcular as horas trabalhadas e o saldo diário básico a partir de entrada e saída. | O resumo do dia é atualizado após evento válido. Atrasos, horas extras e banco de horas entram no MVP-2. |
+| FR-012 | Must | O sistema deve calcular as horas trabalhadas e o saldo diário básico a partir dos períodos abertos e fechados. | O resumo do dia é atualizado após evento válido, descontando o intervalo registrado. Horas extras e banco de horas entram no MVP-2. |
 | FR-013 | Must | O sistema deve identificar inconsistências de jornada. | O colaborador/RH consegue visualizar o motivo e o status da inconsistência. |
 | FR-014 | Must | O colaborador deve consultar a própria jornada e o resumo diário. | A consulta mostra entrada, saída, horas trabalhadas e status no período selecionado. Banco de horas entra no MVP-2. |
 | FR-015 | Should | Gestor/RH deve consultar a jornada dos colaboradores permitidos. | O resultado respeita o escopo organizacional e as permissões do solicitante. |

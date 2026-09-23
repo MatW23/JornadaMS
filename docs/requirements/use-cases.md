@@ -14,8 +14,8 @@
 
 | Incremento | Casos de uso |
 | --- | --- |
-| MVP-1 | UC-001, UC-002, UC-003 em jornada simples, UC-004 para entrada/saída, UC-005 para consulta própria e UC-011 para papéis/parâmetros mínimos |
-| MVP-2 | UC-004 com intervalo, UC-005 para gestores/RH, UC-006, UC-007, UC-008, UC-009 e UC-010 |
+| MVP-1 | UC-001, UC-002, UC-003 em jornada simples, UC-004 para entrada/intervalo/saída, UC-005 para consulta própria e UC-011 para papéis/parâmetros mínimos |
+| MVP-2 | UC-005 para gestores/RH, UC-006, UC-007, UC-008, UC-009 e UC-010 |
 
 ## UC-001 — Autenticar usuário
 
@@ -47,7 +47,7 @@
 
 **Atores:** RH, administrador.
 
-1. Ator cria uma jornada simples com início, fim, fuso e vigência. Tolerâncias, intervalo e escalas entram no MVP-2.
+1. Ator cria uma jornada simples com início, fim, intervalo opcional, fuso e vigência.
 2. Sistema valida intervalos e vigência.
 3. Ator vincula a jornada a colaboradores ou grupo autorizado.
 4. Sistema registra a versão da configuração.
@@ -61,7 +61,7 @@
 **Pré-condições:** sessão válida, colaborador ativo e jornada disponível.
 
 1. Colaborador solicita o registro.
-2. Sistema identifica o próximo tipo esperado (`ENTRADA` ou `SAIDA` no MVP-1).
+2. Sistema identifica o próximo tipo esperado (`ENTRADA`, `INICIO_INTERVALO`, `FIM_INTERVALO` ou `SAIDA`).
 3. Sistema valida sequência, idempotência e horário.
 4. Sistema grava o evento e os metadados.
 5. Sistema recalcula o resumo diário.

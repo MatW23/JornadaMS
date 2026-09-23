@@ -8,13 +8,13 @@ Entregar o fluxo vertical:
 Login
 → Cadastro de colaborador
 → Configuração de jornada simples
-→ Registro de entrada/saída
+→ Registro de entrada/intervalo/saída
 → Resumo diário
 → Histórico
 → Auditoria básica
 ```
 
-O MVP-1 é para uma única organização, com jornada no mesmo dia, entrada/saída, cálculo em minutos e sem tolerância, intervalo, feriado, fechamento automático ou alteração retroativa.
+O MVP-1 é para uma única organização, com jornada no mesmo dia, entrada/intervalo/saída, cálculo em minutos e tolerância básica. Feriado, fechamento automático e alteração retroativa permanecem fora do escopo.
 
 ## Definition of Done
 
@@ -71,7 +71,7 @@ O MVP-1 é para uma única organização, com jornada no mesmo dia, entrada/saí
 | ID | Tarefa | Critério de aceite |
 | --- | --- | --- |
 | T4.1 | Criar `time_events` com `work_date`, origem e correlação. | Data de negócio é calculada no fuso da filial e persistida explicitamente. |
-| T4.2 | Implementar `POST /time-events` para entrada/saída. | Tipo é validado contra o próximo estado esperado. |
+| T4.2 | Implementar `POST /time-events` para entrada, intervalo e saída. | Tipo é validado contra o próximo estado esperado; a sequência direta entrada/saída continua suportada. |
 | T4.3 | Implementar `Idempotency-Key`. | Mesma chave/payload retorna o resultado original; chave/payload diferente retorna `409`. |
 | T4.4 | Serializar concorrência por colaborador e data. | Teste paralelo não cria duas entradas ou duas saídas válidas. |
 | T4.5 | Auditar registro aceito, rejeitado e falho. | Auditoria contém ator lógico, ação, resultado, correlação e metadados permitidos. |
@@ -81,7 +81,7 @@ O MVP-1 é para uma única organização, com jornada no mesmo dia, entrada/saí
 | ID | Tarefa | Critério de aceite |
 | --- | --- | --- |
 | T5.1 | Criar `daily_summaries`. | Existe no máximo um resumo por colaborador/data. |
-| T5.2 | Implementar cálculo de minutos trabalhados. | Com entrada e saída válidas, `worked_minutes = saída - entrada`. |
+| T5.2 | Implementar cálculo de minutos trabalhados. | O sistema soma `entrada → início do intervalo` e `fim do intervalo → saída`, ou `saída - entrada` sem intervalo. |
 | T5.3 | Implementar saldo básico. | `balance_minutes = worked_minutes - scheduled_minutes`, sem arredondamento. |
 | T5.4 | Marcar jornada incompleta ou inválida. | Falta de saída produz status `IN_PROGRESS` ou `INCONSISTENT`, sem cálculo falso. |
 | T5.5 | Implementar `GET /attendance/days`. | Colaborador consulta apenas os próprios dias; admin consulta o escopo permitido. |
@@ -106,4 +106,4 @@ O MVP-1 é para uma única organização, com jornada no mesmo dia, entrada/saí
 
 ## Fora deste backlog
 
-Intervalos, tolerâncias efetivas, atrasos, banco de horas, horas extras, justificativas, ajustes, aprovações, relatórios, PDF, Excel, dashboard, notificações e integrações pertencem ao MVP-2.
+Tolerâncias avançadas, atrasos parametrizáveis, banco de horas, horas extras, justificativas, ajustes, aprovações, relatórios, PDF, Excel, dashboard, notificações e integrações pertencem ao MVP-2. O intervalo e a tolerância básica já foram antecipados para validação do núcleo.

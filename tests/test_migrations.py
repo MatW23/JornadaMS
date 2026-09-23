@@ -22,6 +22,7 @@ CORE_TABLES = {
     "employee_schedules",
     "daily_summaries",
     "time_events",
+    "adjustment_requests",
     "audit_events",
 }
 
@@ -49,6 +50,10 @@ def test_foundation_migration_creates_and_removes_core_tables(tmp_path: Path) ->
         assert CORE_TABLES.issubset(set(inspect(engine).get_table_names()))
         employee_columns = {column["name"] for column in inspect(engine).get_columns("employees")}
         assert "company_id" in employee_columns
+        time_event_columns = {
+            column["name"] for column in inspect(engine).get_columns("time_events")
+        }
+        assert "status" in time_event_columns
         with engine.connect() as connection:
             assert connection.execute(
                 text(

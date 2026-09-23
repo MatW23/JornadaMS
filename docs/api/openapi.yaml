@@ -12,6 +12,8 @@ tags:
   - name: Employees
   - name: Schedules
   - name: Attendance
+  - name: Reporting
+  - name: Adjustments
   - name: Health
 security:
   - BearerAuth: []
@@ -540,6 +542,210 @@ paths:
           $ref: '#/components/responses/Unauthorized'
         '403':
           $ref: '#/components/responses/Forbidden'
+  /api/v1/reports/attendance:
+    get:
+      tags: [Reporting]
+      operationId: getAttendanceReport
+      x-mvp: MVP-2
+      parameters:
+        - in: query
+          name: from
+          required: true
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: to
+          required: true
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: employee_id
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: status
+          required: false
+          schema:
+            type: string
+            enum: [IN_PROGRESS, COMPLETE, INCONSISTENT]
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Relatório operacional de jornada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AttendanceReportPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/reports/attendance/export:
+    get:
+      tags: [Reporting]
+      operationId: exportAttendanceReport
+      x-mvp: MVP-2
+      parameters:
+        - in: query
+          name: from
+          required: true
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: to
+          required: true
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: employee_id
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - in: query
+          name: status
+          required: false
+          schema:
+            type: string
+            enum: [IN_PROGRESS, COMPLETE, INCONSISTENT]
+      responses:
+        '200':
+          description: Arquivo CSV do relatório
+          content:
+            text/csv:
+              schema:
+                type: string
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/adjustment-requests:
+    get:
+      tags: [Adjustments]
+      operationId: listAdjustmentRequests
+      x-mvp: MVP-2
+      parameters:
+        - in: query
+          name: status
+          required: false
+          schema:
+            type: string
+            enum: [PENDING, APPROVED, REJECTED]
+        - $ref: '#/components/parameters/Page'
+        - $ref: '#/components/parameters/PageSize'
+      responses:
+        '200':
+          description: Solicitações de ajuste no escopo autorizado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdjustmentRequestPage'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      tags: [Adjustments]
+      operationId: createAdjustmentRequest
+      x-mvp: MVP-2
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdjustmentRequestCreate'
+      responses:
+        '201':
+          description: Solicitação criada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdjustmentRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+  /api/v1/adjustment-requests/{request_id}/approve:
+    post:
+      tags: [Adjustments]
+      operationId: approveAdjustmentRequest
+      x-mvp: MVP-2
+      parameters:
+        - in: path
+          name: request_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdjustmentDecision'
+      responses:
+        '200':
+          description: Solicitação aprovada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdjustmentRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /api/v1/adjustment-requests/{request_id}/reject:
+    post:
+      tags: [Adjustments]
+      operationId: rejectAdjustmentRequest
+      x-mvp: MVP-2
+      parameters:
+        - in: path
+          name: request_id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AdjustmentDecision'
+      responses:
+        '200':
+          description: Solicitação rejeitada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdjustmentRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
   /health/live:
     get:
       tags: [Health]
@@ -851,6 +1057,14 @@ components:
         start_time:
           type: string
           format: time
+        break_start:
+          type: [string, 'null']
+          format: time
+          description: Início opcional do intervalo; deve ser enviado com break_end.
+        break_end:
+          type: [string, 'null']
+          format: time
+          description: Fim opcional do intervalo; deve ser enviado com break_start.
         end_time:
           type: string
           format: time
@@ -870,6 +1084,12 @@ components:
           minLength: 1
         start_time:
           type: string
+          format: time
+        break_start:
+          type: [string, 'null']
+          format: time
+        break_end:
+          type: [string, 'null']
           format: time
         end_time:
           type: string
@@ -918,7 +1138,7 @@ components:
       properties:
         event_type:
           type: string
-          enum: [ENTRADA, SAIDA]
+          enum: [ENTRADA, INICIO_INTERVALO, FIM_INTERVALO, SAIDA]
         occurred_at:
           type: string
           format: date-time
@@ -942,7 +1162,7 @@ components:
               format: date
             status:
               type: string
-              enum: [VALID, INVALID, REJECTED]
+              enum: [VALID, SUPERSEDED, INVALID, REJECTED]
     DailySummary:
       type: object
       required: [work_date, scheduled_minutes, worked_minutes, balance_minutes, status]
@@ -959,6 +1179,154 @@ components:
         status:
           type: string
           enum: [IN_PROGRESS, COMPLETE, INCONSISTENT]
+    AttendanceReportItem:
+      type: object
+      required: [employee_id, employee_name, registration_code, work_date, scheduled_minutes, worked_minutes, balance_minutes, delay_minutes, overtime_minutes, status]
+      properties:
+        employee_id:
+          type: string
+          format: uuid
+        employee_name:
+          type: string
+        registration_code:
+          type: string
+        work_date:
+          type: string
+          format: date
+        scheduled_minutes:
+          type: integer
+        worked_minutes:
+          type: integer
+        balance_minutes:
+          type: integer
+        delay_minutes:
+          type: integer
+        overtime_minutes:
+          type: integer
+        status:
+          type: string
+          enum: [IN_PROGRESS, COMPLETE, INCONSISTENT]
+    AttendanceReportTotals:
+      type: object
+      required: [scheduled_minutes, worked_minutes, balance_minutes, delay_minutes, overtime_minutes]
+      properties:
+        scheduled_minutes:
+          type: integer
+        worked_minutes:
+          type: integer
+        balance_minutes:
+          type: integer
+        delay_minutes:
+          type: integer
+        overtime_minutes:
+          type: integer
+    AttendanceReportPage:
+      type: object
+      required: [items, from_date, to_date, page, page_size, total_items, total_pages, totals]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AttendanceReportItem'
+        from_date:
+          type: string
+          format: date
+        to_date:
+          type: string
+          format: date
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_items:
+          type: integer
+        total_pages:
+          type: integer
+        totals:
+          $ref: '#/components/schemas/AttendanceReportTotals'
+    AdjustmentRequestCreate:
+      type: object
+      required: [event_type, occurred_at, reason]
+      properties:
+        employee_id:
+          type: [string, 'null']
+          format: uuid
+        target_event_id:
+          type: [string, 'null']
+          format: uuid
+        event_type:
+          type: string
+          enum: [ENTRADA, INICIO_INTERVALO, FIM_INTERVALO, SAIDA]
+        occurred_at:
+          type: string
+          format: date-time
+        reason:
+          type: string
+          minLength: 10
+          maxLength: 1000
+    AdjustmentDecision:
+      type: object
+      properties:
+        comment:
+          type: [string, 'null']
+          maxLength: 1000
+    AdjustmentRequest:
+      allOf:
+        - $ref: '#/components/schemas/AdjustmentRequestCreate'
+        - type: object
+          required: [id, employee_name, work_date, proposed_event_type, proposed_occurred_at, proposed_timezone, status, requested_by, requested_at]
+          properties:
+            id:
+              type: string
+              format: uuid
+            employee_name:
+              type: string
+            work_date:
+              type: string
+              format: date
+            proposed_event_type:
+              type: string
+            proposed_occurred_at:
+              type: string
+              format: date-time
+            proposed_timezone:
+              type: string
+            status:
+              type: string
+              enum: [PENDING, APPROVED, REJECTED]
+            requested_by:
+              type: string
+              format: uuid
+            decided_by:
+              type: [string, 'null']
+              format: uuid
+            decision_comment:
+              type: [string, 'null']
+            result_event_id:
+              type: [string, 'null']
+              format: uuid
+            requested_at:
+              type: string
+              format: date-time
+            decided_at:
+              type: [string, 'null']
+              format: date-time
+    AdjustmentRequestPage:
+      type: object
+      required: [items, page, page_size, total_items, total_pages]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdjustmentRequest'
+        page:
+          type: integer
+        page_size:
+          type: integer
+        total_items:
+          type: integer
+        total_pages:
+          type: integer
     TimeEventResult:
       type: object
       required: [event, daily_summary]
